@@ -1,0 +1,14 @@
+output "cluster_arn" {
+  description = "ARN of the ECS cluster"
+  value       = aws_ecs_cluster.this.arn
+}
+
+output "cluster_name" {
+  description = "Name of the ECS cluster"
+  value       = aws_ecs_cluster.this.name
+}
+
+output "execute_command_log_group_name" {
+  description = "Log group receiving ECS Exec sessions, when enabled"
+  value       = one(aws_cloudwatch_log_group.execute_command[*].name)
+}

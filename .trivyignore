@@ -1,0 +1,2 @@
+# Tasks must reach ECR, Secrets Manager, CloudWatch Logs and third-party APIs; documented in modules/ecs-service/README.md
+AWS-0104
