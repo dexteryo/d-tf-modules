@@ -10,28 +10,40 @@ variable "environment" {
   default     = "integration"
 }
 
+variable "repository" {
+  description = "Repository that owns this configuration, as owner/name"
+  type        = string
+  default     = "example-org/example-infra"
+}
+
 variable "vpc_id" {
   description = "Placeholder VPC ID"
   type        = string
   default     = "vpc-0123456789abcdef0"
 }
 
-variable "private_subnet_ids" {
-  description = "Placeholder private subnet IDs"
+variable "vpc_cidr" {
+  description = "Placeholder CIDR of the VPC; the tasks may only reach this range, so the VPC needs endpoints for ECR, Secrets Manager, CloudWatch Logs and DynamoDB"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "public_subnet_ids" {
+  description = "Placeholder public subnet IDs for the load balancer"
   type        = list(string)
   default     = ["subnet-0123456789abcdef0", "subnet-0fedcba9876543210"]
 }
 
-variable "listener_arn" {
-  description = "Placeholder HTTPS listener ARN of an existing ALB"
-  type        = string
-  default     = "arn:aws:elasticloadbalancing:eu-west-1:123456789012:listener/app/example/0123456789abcdef/0123456789abcdef"
+variable "private_subnet_ids" {
+  description = "Placeholder private subnet IDs for the tasks"
+  type        = list(string)
+  default     = ["subnet-0a1b2c3d4e5f60718", "subnet-08f7e6d5c4b3a2910"]
 }
 
-variable "alb_security_group_id" {
-  description = "Placeholder security group ID of the ALB"
+variable "certificate_arn" {
+  description = "Placeholder ACM certificate ARN for the load balancer listener"
   type        = string
-  default     = "sg-0123456789abcdef0"
+  default     = "arn:aws:acm:eu-west-1:123456789012:certificate/00000000-0000-0000-0000-000000000000"
 }
 
 variable "agent_host_header" {
@@ -40,8 +52,20 @@ variable "agent_host_header" {
   default     = "ordering-agent.example.com"
 }
 
-variable "ecr_registry" {
-  description = "Placeholder ECR registry host"
+variable "github_repository" {
+  description = "Repository whose workflows deploy the service, as owner/name"
   type        = string
-  default     = "123456789012.dkr.ecr.eu-west-1.amazonaws.com"
+  default     = "example-org/example-app"
+}
+
+variable "oidc_provider_arn" {
+  description = "Placeholder ARN of the GitHub OIDC identity provider of the account"
+  type        = string
+  default     = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+}
+
+variable "alarm_email_addresses" {
+  description = "Addresses that receive the alarms; each must confirm the subscription"
+  type        = list(string)
+  default     = ["alerts@example.com"]
 }

@@ -1,25 +1,19 @@
 locals {
-  tags = merge(
-    {
-      Name        = var.name
-      Environment = var.environment
-      ManagedBy   = "terraform"
-    },
-    var.tags
-  )
+  full_name = "${var.name}-${var.environment}"
+  tags      = merge(var.tags, { Name = local.full_name })
 }
 
 resource "aws_cloudwatch_log_group" "execute_command" {
   count = var.enable_execute_command_logging ? 1 : 0
 
-  name              = "/ecs/${var.name}/execute-command"
+  name              = "/ecs/${local.full_name}/execute-command"
   retention_in_days = var.execute_command_log_retention_days
   kms_key_id        = var.execute_command_log_kms_key_arn
   tags              = local.tags
 }
 
 resource "aws_ecs_cluster" "this" {
-  name = var.name
+  name = local.full_name
 
   setting {
     name  = "containerInsights"

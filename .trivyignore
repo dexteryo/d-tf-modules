@@ -1,2 +1,2 @@
-# Tasks must reach ECR, Secrets Manager, CloudWatch Logs and third-party APIs; documented in modules/ecs-service/README.md
-AWS-0104
+# The alb module is the external load balancer by design: its security group is closed unless an ingress option is set (CloudFront prefix list, CIDRs or prefix lists), and every listener answers 403 without a rule; documented in modules/alb/README.md
+AWS-0053

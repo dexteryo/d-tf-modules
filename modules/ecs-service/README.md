@@ -1,22 +1,36 @@
 # ecs-service
 
-One ECS Fargate service: task definition, security group, optional ALB target group and listener rule, log group, execution and task roles, optional autoscaling.
+One ECS Fargate service: task definition, service, target group and listener rule, log group, execution and task roles, optional autoscaling.
 
 Terraform owns the shape of the service. Deploys register new task definition revisions with the `ecs-deploy` action from `dex-github-actions`, so by default the service ignores `task_definition` and `desired_count` changes (`manage_task_definition_externally = true`).
+
+## Owns
+
+- `aws_ecs_task_definition`, `aws_ecs_service` and the CloudWatch log group.
+- The target group and the listener rule that attaches the service to a listener it is given.
+- The execution role and the task role with their inline policies.
+- Target tracking autoscaling.
+
+## Does not own
+
+- Security groups or their rules: pass `security_group_ids` (`security-group`).
+- The load balancer, its listener, certificates and ingress (`alb`). The service takes a `listener_arn` and attaches a rule to it.
+- The cluster (`ecs-cluster`), image repositories (`ecr`), keys (`kms`), alarms (`ecs-service-alarms`) and the deploy role (`ci-oidc-role`).
 
 ## Usage
 
 ```hcl
 module "service" {
-  source = "git::https://github.com/dexteryo/dex-tf-modules.git//modules/ecs-service?ref=v0.1.0"
+  source = "git::ssh://git@github.com/dexteryo/dex-tf-modules.git//modules/ecs-service?ref=v0.2.0"
 
-  name        = "ordering-agent"
-  environment = "integration"
-  cluster_arn = module.cluster.cluster_arn
-  vpc_id      = var.vpc_id
-  subnet_ids  = var.private_subnet_ids
-  cpu         = 512
-  memory      = 1024
+  name               = "ordering"
+  environment        = "integration"
+  tags               = module.tags.all_tags
+  cluster_arn        = module.cluster.cluster_arn
+  subnet_ids         = var.private_subnet_ids
+  security_group_ids = [module.task_security_group.security_group_id]
+  cpu                = 512
+  memory             = 1024
 
   containers = [{
     name  = "app"
@@ -25,17 +39,17 @@ module "service" {
   }]
 
   load_balancer = {
-    container_name        = "app"
-    container_port        = 8080
-    listener_arn          = var.listener_arn
-    host_headers          = ["app.example.com"]
-    priority              = 100
-    alb_security_group_id = var.alb_security_group_id
+    container_name = "app"
+    container_port = 8080
+    vpc_id         = var.vpc_id
+    listener_arn   = module.alb.listener_arns["https"]
+    host_headers   = ["app.example.com"]
+    priority       = 100
   }
 }
 ```
 
-See `examples/ordering-agent` for a two-container task with a DynamoDB table.
+See `examples/ordering-agent` for a two-container task wired to every other module.
 
 ## Behaviour worth knowing
 
@@ -44,8 +58,7 @@ See `examples/ordering-agent` for a two-container task with a DynamoDB table.
 - **Read-only root filesystem.** Defaults to `true` per container. Set `read_only_root_filesystem = false` only for a container that must write to its filesystem.
 - **Health checks.** Container health checks run inside the task, so use `127.0.0.1` rather than `localhost` (`localhost` can resolve to `::1`, where many servers do not listen). With `default_health_check_path` set, every container that has a `port` and no `health_check` gets `curl -fsS http://127.0.0.1:<port><path>`; the image must contain `curl`.
 - **Sidecars.** A container without `port` is never reachable from the load balancer. Containers share one network namespace under `awsvpc`, so a sidecar listening on `127.0.0.1` is reachable by the other containers and by nothing else. Use `depends_on` with `HEALTHY` (needs a `health_check` on the dependency) or `START`.
-- **Load balancer.** The target group uses `target_type = "ip"`. At least one of `host_headers` or `path_patterns` is required. `health_check_grace_period_seconds` only applies when a load balancer is set.
-- **Security group.** Ingress exists only with a `load_balancer`: TCP on `container_port` from `alb_security_group_id`, no CIDR ranges. Egress is open (`0.0.0.0/0`, all protocols) because tasks must reach ECR, Secrets Manager, CloudWatch Logs and whatever external APIs the service calls. Trivy rule `AWS-0104` is therefore ignored in `.trivyignore`. To restrict egress, run tasks in subnets whose routes and VPC endpoints limit the destinations.
+- **Load balancer.** The target group uses `target_type = "ip"` and lives in `load_balancer.vpc_id`. At least one of `host_headers` or `path_patterns` is required. `health_check_grace_period_seconds` only applies when a load balancer is set. Open the container port to the load balancer in the group you pass in `security_group_ids`.
 - **Two service resources.** Terraform cannot make `lifecycle.ignore_changes` conditional, so `aws_ecs_service.externally_managed` and `aws_ecs_service.terraform_managed` carry identical settings and exactly one exists. Switching the variable on a live service destroys and recreates the service.
 
 ## IAM
@@ -76,9 +89,19 @@ Used by your application. It has no permissions unless you grant them:
 | `task_role_policy_json` (policy `application`) | Whatever policy document you pass. Scope it to specific resources |
 | `enable_execute_command = true` (policy `ecs-exec`) | `ssmmessages:CreateControlChannel`, `CreateDataChannel`, `OpenControlChannel`, `OpenDataChannel` on `*`. AWS requires `*` for these. Off by default |
 
-### Tests
+The only wildcard resources the module can create are `ecr:GetAuthorizationToken` and the `ssmmessages` actions above.
 
-`terraform test` asserts that, with defaults, no statement uses `Resource = "*"` except `ecr:GetAuthorizationToken`.
+## Left out of the reference shape
+
+The reference service modules also cover EC2 launch type, scheduled and ad-hoc task types, an nginx front container, a log forwarding sidecar and its endpoint settings, an observability agent sidecar, DNS records, a network load balancer, CodeDeploy blue/green with a second target group, and security group management with migration helpers. They are team and estate specific, or replaced by other modules here (security groups, ALB). The kept ideas: a service type with a placeholder image replaced by the pipeline, role arns that may be supplied or created, autoscaling profiles on CPU, and outputs for the target group suffix and family.
+
+## Tests
+
+`terraform test` with `mock_provider "aws"` carries over the v0.1.0 assertions: the service ignores task definition changes and desired count, the service only uses the security groups it is given, the execution role reads exactly the listed secrets, health checks use `127.0.0.1`, no wildcard IAM resource beyond the documented exceptions, a read-only root filesystem by default, and the role trust is pinned to the account. It also covers the target group, the listener rule and the validations.
+
+## Example
+
+`examples/basic` in this directory is a complete configuration that validates without credentials.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -116,9 +139,6 @@ No modules.
 | [aws_iam_role_policy.task_execute_command](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
 | [aws_lb_listener_rule.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener_rule) | resource |
 | [aws_lb_target_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_target_group) | resource |
-| [aws_security_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
-| [aws_vpc_security_group_egress_rule.all](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_egress_rule) | resource |
-| [aws_vpc_security_group_ingress_rule.from_alb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_security_group_ingress_rule) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
@@ -132,8 +152,8 @@ No modules.
 | environment | Deployment environment (for example integration, staging, production) | `string` | n/a | yes |
 | memory | Task memory in MiB | `number` | n/a | yes |
 | name | Service name. Resources are named <name>-<environment> | `string` | n/a | yes |
+| security\_group\_ids | Security groups attached to the tasks, for example from the security-group module. The service creates none | `list(string)` | n/a | yes |
 | subnet\_ids | Subnets the tasks run in | `list(string)` | n/a | yes |
-| vpc\_id | VPC the service security group and target group are created in | `string` | n/a | yes |
 | assign\_public\_ip | Assign a public IP to tasks. Keep false unless the subnets have no NAT or endpoints | `bool` | `false` | no |
 | autoscaling | Target tracking autoscaling. Set cpu\_target and/or memory\_target as utilisation percentages | ```object({ min = number max = number cpu_target = optional(number) memory_target = optional(number) })``` | `null` | no |
 | capacity\_provider\_strategy | Capacity provider strategy. Empty runs the service on FARGATE | ```list(object({ capacity_provider = string weight = number base = optional(number, 0) }))``` | `[]` | no |
@@ -146,11 +166,11 @@ No modules.
 | extra\_execution\_secret\_arns | Additional Secrets Manager or SSM parameter ARNs the execution role may read | `list(string)` | `[]` | no |
 | health\_check\_grace\_period\_seconds | Seconds ECS ignores failing load balancer health checks after a task starts. Only used with load\_balancer | `number` | `60` | no |
 | kms\_key\_arns | KMS keys the execution role may decrypt (secrets encrypted with a customer-managed key) | `list(string)` | `[]` | no |
-| load\_balancer | Attach the service to an existing ALB listener. Set at least one of host\_headers or path\_patterns | ```object({ container_name = string container_port = number listener_arn = string host_headers = optional(list(string), []) path_patterns = optional(list(string), []) priority = number health_check_path = optional(string, "/") health_check_matcher = optional(string, "200") deregistration_delay = optional(number, 30) alb_security_group_id = string })``` | `null` | no |
+| load\_balancer | Attach the service to an existing ALB listener with a target group and a listener rule. Set at least one of host\_headers or path\_patterns. The ALB, its listener and the security group rules are owned by the alb and security-group modules | ```object({ container_name = string container_port = number vpc_id = string listener_arn = string host_headers = optional(list(string), []) path_patterns = optional(list(string), []) priority = number health_check_path = optional(string, "/") health_check_matcher = optional(string, "200") deregistration_delay = optional(number, 30) })``` | `null` | no |
 | log\_kms\_key\_arn | KMS key ARN used to encrypt the service log group | `string` | `null` | no |
 | log\_retention\_days | CloudWatch log retention in days | `number` | `30` | no |
 | manage\_task\_definition\_externally | Ignore task\_definition and desired\_count changes on the service because deploys register new revisions outside Terraform | `bool` | `true` | no |
-| tags | Tags applied to all resources | `map(string)` | `{}` | no |
+| tags | Tags for every resource, usually the all\_tags output of the tags module | `map(string)` | `{}` | no |
 | task\_role\_policy\_json | IAM policy document (JSON) attached inline to the task role | `string` | `null` | no |
 
 ## Outputs
@@ -160,10 +180,10 @@ No modules.
 | container\_names | Names of the containers in the task |
 | execution\_role\_arn | ARN of the task execution role |
 | log\_group\_name | Name of the CloudWatch log group |
-| security\_group\_id | ID of the task security group |
 | service\_arn | ARN of the ECS service |
 | service\_name | Name of the ECS service |
 | target\_group\_arn | ARN of the target group, null without a load balancer |
+| target\_group\_arn\_suffix | ARN suffix of the target group for CloudWatch dimensions, null without a load balancer |
 | task\_definition\_arn | ARN of the task definition revision Terraform last registered |
 | task\_definition\_family | Task definition family. Pass it to the ecs-deploy action |
 | task\_role\_arn | ARN of the task role |

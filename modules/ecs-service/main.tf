@@ -24,48 +24,17 @@ resource "aws_ecs_task_definition" "this" {
 
   lifecycle {
     precondition {
-      condition     = var.load_balancer == null || contains(var.containers[*].name, var.load_balancer.container_name)
+      condition     = var.load_balancer == null ? true : contains(var.containers[*].name, var.load_balancer.container_name)
       error_message = "load_balancer.container_name must match one of the containers."
     }
   }
-}
-
-resource "aws_security_group" "this" {
-  name        = local.full_name
-  description = "Tasks of ${local.full_name}"
-  vpc_id      = var.vpc_id
-  tags        = local.tags
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_vpc_security_group_ingress_rule" "from_alb" {
-  count = local.load_balancer_enabled ? 1 : 0
-
-  security_group_id            = aws_security_group.this.id
-  referenced_security_group_id = var.load_balancer.alb_security_group_id
-  ip_protocol                  = "tcp"
-  from_port                    = var.load_balancer.container_port
-  to_port                      = var.load_balancer.container_port
-  description                  = "Application port from the load balancer"
-  tags                         = local.tags
-}
-
-resource "aws_vpc_security_group_egress_rule" "all" {
-  security_group_id = aws_security_group.this.id
-  cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1"
-  description       = "Outbound to ECR, Secrets Manager, AWS APIs and dependencies"
-  tags              = local.tags
 }
 
 resource "aws_lb_target_group" "this" {
   count = local.load_balancer_enabled ? 1 : 0
 
   name_prefix          = substr(var.name, 0, 6)
-  vpc_id               = var.vpc_id
+  vpc_id               = var.load_balancer.vpc_id
   port                 = var.load_balancer.container_port
   protocol             = "HTTP"
   target_type          = "ip"
@@ -131,7 +100,7 @@ resource "aws_ecs_service" "externally_managed" {
 
   network_configuration {
     subnets          = var.subnet_ids
-    security_groups  = [aws_security_group.this.id]
+    security_groups  = var.security_group_ids
     assign_public_ip = var.assign_public_ip
   }
 
@@ -183,7 +152,7 @@ resource "aws_ecs_service" "terraform_managed" {
 
   network_configuration {
     subnets          = var.subnet_ids
-    security_groups  = [aws_security_group.this.id]
+    security_groups  = var.security_group_ids
     assign_public_ip = var.assign_public_ip
   }
 

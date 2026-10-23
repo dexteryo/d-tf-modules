@@ -8,6 +8,11 @@ output "cluster_name" {
   value       = aws_ecs_cluster.this.name
 }
 
+output "cluster_id" {
+  description = "ID of the ECS cluster"
+  value       = aws_ecs_cluster.this.id
+}
+
 output "execute_command_log_group_name" {
   description = "Log group receiving ECS Exec sessions, when enabled"
   value       = one(aws_cloudwatch_log_group.execute_command[*].name)

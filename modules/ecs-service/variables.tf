@@ -13,14 +13,19 @@ variable "cluster_arn" {
   type        = string
 }
 
-variable "vpc_id" {
-  description = "VPC the service security group and target group are created in"
-  type        = string
-}
-
 variable "subnet_ids" {
   description = "Subnets the tasks run in"
   type        = list(string)
+}
+
+variable "security_group_ids" {
+  description = "Security groups attached to the tasks, for example from the security-group module. The service creates none"
+  type        = list(string)
+
+  validation {
+    condition     = length(var.security_group_ids) > 0
+    error_message = "At least one security group is required."
+  }
 }
 
 variable "assign_public_ip" {
@@ -117,23 +122,23 @@ variable "default_health_check_path" {
 }
 
 variable "load_balancer" {
-  description = "Attach the service to an existing ALB listener. Set at least one of host_headers or path_patterns"
+  description = "Attach the service to an existing ALB listener with a target group and a listener rule. Set at least one of host_headers or path_patterns. The ALB, its listener and the security group rules are owned by the alb and security-group modules"
   type = object({
-    container_name        = string
-    container_port        = number
-    listener_arn          = string
-    host_headers          = optional(list(string), [])
-    path_patterns         = optional(list(string), [])
-    priority              = number
-    health_check_path     = optional(string, "/")
-    health_check_matcher  = optional(string, "200")
-    deregistration_delay  = optional(number, 30)
-    alb_security_group_id = string
+    container_name       = string
+    container_port       = number
+    vpc_id               = string
+    listener_arn         = string
+    host_headers         = optional(list(string), [])
+    path_patterns        = optional(list(string), [])
+    priority             = number
+    health_check_path    = optional(string, "/")
+    health_check_matcher = optional(string, "200")
+    deregistration_delay = optional(number, 30)
   })
   default = null
 
   validation {
-    condition     = var.load_balancer == null || length(var.load_balancer.host_headers) + length(var.load_balancer.path_patterns) > 0
+    condition     = var.load_balancer == null ? true : length(var.load_balancer.host_headers) + length(var.load_balancer.path_patterns) > 0
     error_message = "load_balancer needs at least one host header or path pattern."
   }
 }
@@ -223,7 +228,7 @@ variable "capacity_provider_strategy" {
 }
 
 variable "tags" {
-  description = "Tags applied to all resources"
+  description = "Tags for every resource, usually the all_tags output of the tags module"
   type        = map(string)
   default     = {}
 }

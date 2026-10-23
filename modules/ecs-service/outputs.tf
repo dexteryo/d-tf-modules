@@ -38,9 +38,9 @@ output "target_group_arn" {
   value       = one(aws_lb_target_group.this[*].arn)
 }
 
-output "security_group_id" {
-  description = "ID of the task security group"
-  value       = aws_security_group.this.id
+output "target_group_arn_suffix" {
+  description = "ARN suffix of the target group for CloudWatch dimensions, null without a load balancer"
+  value       = one(aws_lb_target_group.this[*].arn_suffix)
 }
 
 output "log_group_name" {

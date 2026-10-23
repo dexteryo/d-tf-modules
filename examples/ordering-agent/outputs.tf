@@ -13,6 +13,16 @@ output "task_definition_family" {
   value       = module.ordering_agent.task_definition_family
 }
 
+output "deploy_role_arn" {
+  description = "Role the deploy workflow assumes through GitHub OIDC"
+  value       = module.deploy_role.role_arn
+}
+
+output "repository_urls" {
+  description = "Image repositories"
+  value       = { for name, repository in module.ecr : name => repository.repository_url }
+}
+
 output "sessions_table_name" {
   description = "DynamoDB table name"
   value       = aws_dynamodb_table.sessions.name

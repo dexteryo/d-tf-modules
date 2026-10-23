@@ -7,15 +7,7 @@ locals {
   cluster_name = element(split("/", var.cluster_arn), length(split("/", var.cluster_arn)) - 1)
   region       = data.aws_region.current.name
 
-  tags = merge(
-    {
-      Name        = local.full_name
-      Environment = var.environment
-      Service     = var.name
-      ManagedBy   = "terraform"
-    },
-    var.tags
-  )
+  tags = merge(var.tags, { Name = local.full_name })
 
   load_balancer_enabled = var.load_balancer != null
 

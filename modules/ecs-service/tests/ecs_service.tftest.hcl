@@ -40,10 +40,11 @@ variables {
   name        = "ordering-agent"
   environment = "integration"
   cluster_arn = "arn:aws:ecs:eu-west-1:123456789012:cluster/example-integration"
-  vpc_id      = "vpc-0123456789abcdef0"
   subnet_ids  = ["subnet-0123456789abcdef0", "subnet-0fedcba9876543210"]
-  cpu         = 512
-  memory      = 1024
+
+  security_group_ids = ["sg-0fedcba9876543210"]
+  cpu                = 512
+  memory             = 1024
 
   default_health_check_path = "/healthz"
 
@@ -69,12 +70,12 @@ variables {
   ]
 
   load_balancer = {
-    container_name        = "agent"
-    container_port        = 8788
-    listener_arn          = "arn:aws:elasticloadbalancing:eu-west-1:123456789012:listener/app/example/0123456789abcdef/0123456789abcdef"
-    host_headers          = ["agent.example.com"]
-    priority              = 100
-    alb_security_group_id = "sg-0123456789abcdef0"
+    container_name = "agent"
+    container_port = 8788
+    vpc_id         = "vpc-0123456789abcdef0"
+    listener_arn   = "arn:aws:elasticloadbalancing:eu-west-1:123456789012:listener/app/example/0123456789abcdef/0123456789abcdef"
+    host_headers   = ["agent.example.com"]
+    priority       = 100
   }
 
   extra_execution_secret_arns = ["arn:aws:secretsmanager:eu-west-1:123456789012:secret:example/extra-MnOpQr"]
@@ -144,36 +145,44 @@ run "terraform_managed_service_follows_task_definition" {
   }
 }
 
-run "security_group_only_allows_the_alb" {
+run "service_uses_the_given_security_groups_and_owns_none" {
   command = apply
 
   assert {
-    condition     = length(aws_vpc_security_group_ingress_rule.from_alb) == 1
-    error_message = "Exactly one ingress rule is expected."
+    condition     = toset(aws_ecs_service.externally_managed[0].network_configuration[0].security_groups) == toset(["sg-0fedcba9876543210"])
+    error_message = "The service must attach exactly the security groups it was given."
   }
 
   assert {
-    condition     = aws_vpc_security_group_ingress_rule.from_alb[0].referenced_security_group_id == "sg-0123456789abcdef0"
-    error_message = "Ingress must reference the ALB security group."
-  }
-
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.from_alb[0].cidr_ipv4 == null && aws_vpc_security_group_ingress_rule.from_alb[0].cidr_ipv6 == null
-    error_message = "Ingress must not use CIDR ranges."
-  }
-
-  assert {
-    condition     = aws_vpc_security_group_ingress_rule.from_alb[0].from_port == 8788 && aws_vpc_security_group_ingress_rule.from_alb[0].to_port == 8788
-    error_message = "Ingress must be limited to the container port."
-  }
-
-  assert {
-    condition     = length(aws_security_group.this.ingress) == 0
-    error_message = "No inline ingress rules are allowed."
+    condition     = aws_ecs_service.externally_managed[0].network_configuration[0].assign_public_ip == false
+    error_message = "Tasks must not get a public IP by default."
   }
 }
 
-run "no_ingress_without_load_balancer" {
+run "target_group_lives_in_the_vpc_of_the_load_balancer" {
+  command = apply
+
+  assert {
+    condition     = aws_lb_target_group.this[0].vpc_id == "vpc-0123456789abcdef0" && aws_lb_target_group.this[0].port == 8788 && aws_lb_target_group.this[0].target_type == "ip"
+    error_message = "The target group must use the given VPC, the container port and ip targets."
+  }
+
+  assert {
+    condition     = one([for c in aws_lb_listener_rule.this[0].condition : one([for h in c.host_header : one(h.values)]) if length(c.host_header) > 0]) == "agent.example.com"
+    error_message = "The listener rule must match the host header."
+  }
+}
+
+run "target_group_suffix_is_exposed_for_alarms" {
+  command = apply
+
+  assert {
+    condition     = output.target_group_arn_suffix == aws_lb_target_group.this[0].arn_suffix
+    error_message = "The target group suffix output must follow the target group."
+  }
+}
+
+run "no_target_group_or_rule_without_load_balancer" {
   command = apply
 
   variables {
@@ -181,9 +190,19 @@ run "no_ingress_without_load_balancer" {
   }
 
   assert {
-    condition     = length(aws_vpc_security_group_ingress_rule.from_alb) == 0
-    error_message = "Without a load balancer there must be no ingress."
+    condition     = length(aws_lb_target_group.this) == 0 && length(aws_lb_listener_rule.this) == 0
+    error_message = "Without a load balancer there is no target group or rule."
   }
+}
+
+run "rejects_empty_security_group_list" {
+  command = plan
+
+  variables {
+    security_group_ids = []
+  }
+
+  expect_failures = [var.security_group_ids]
 }
 
 run "execution_role_reads_exactly_the_listed_secrets" {
@@ -308,4 +327,31 @@ run "rejects_duplicate_container_names" {
   }
 
   expect_failures = [var.containers]
+}
+
+run "execute_command_wildcard_is_limited_to_the_session_channels" {
+  command = apply
+
+  variables {
+    enable_execute_command = true
+  }
+
+  assert {
+    condition     = alltrue([for a in jsondecode(aws_iam_role_policy.task_execute_command[0].policy).Statement[0].Action : startswith(a, "ssmmessages:")])
+    error_message = "The only wildcard resource of the task role may belong to the ssmmessages session channel actions."
+  }
+
+  assert {
+    condition     = aws_ecs_service.externally_managed[0].enable_execute_command
+    error_message = "The service must enable ECS Exec."
+  }
+}
+
+run "application_policy_is_attached_only_when_given" {
+  command = apply
+
+  assert {
+    condition     = length(aws_iam_role_policy.task) == 0
+    error_message = "The task role has no permissions unless a policy is passed."
+  }
 }

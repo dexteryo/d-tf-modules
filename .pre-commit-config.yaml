@@ -10,3 +10,22 @@ repos:
       - id: terraform_docs
         args:
           - --args=--config=.terraform-docs.yml
+  - repo: local
+    hooks:
+      - id: no-foreign-identifiers
+        name: no foreign identifiers
+        entry: scripts/check-no-foreign-identifiers.sh
+        language: script
+        pass_filenames: false
+        always_run: true
+      - id: no-foreign-identifiers-test
+        name: no foreign identifiers test
+        entry: tests/check-no-foreign-identifiers.test.sh
+        language: script
+        pass_filenames: false
+        files: ^(scripts|tests)/
+      - id: shellcheck
+        name: shellcheck
+        entry: shellcheck
+        language: system
+        files: ^(scripts|tests)/.*\.sh$

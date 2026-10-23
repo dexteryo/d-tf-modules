@@ -1,5 +1,5 @@
 variable "name" {
-  description = "Cluster name"
+  description = "Workload name. The cluster is named <name>-<environment>"
   type        = string
 }
 
@@ -60,7 +60,7 @@ variable "execute_command_log_retention_days" {
 }
 
 variable "tags" {
-  description = "Tags applied to all resources"
+  description = "Tags for every resource, usually the all_tags output of the tags module"
   type        = map(string)
   default     = {}
 }
