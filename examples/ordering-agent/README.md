@@ -29,4 +29,4 @@ terraform plan -var vpc_id=vpc-... -var 'private_subnet_ids=["subnet-..."]'
 
 `terraform test` plans nothing against AWS: it applies the whole composition with `mock_provider "aws"` to prove the modules fit together (no dependency cycle between the load balancer group and the task group).
 
-After the first apply, deploy real images with the `ecs-promote` or `ecs-service-deploy` workflow of `dex-github-actions` using the outputs `cluster_name`, `service_name`, `task_definition_family` and `deploy_role_arn`. Container names in the workflow `images` input must be `ordering-agent` and `ordering-mcp`.
+After the first apply, deploy real images with the `ecs-promote` or `ecs-service-deploy` workflow of `d-github-actions` using the outputs `cluster_name`, `service_name`, `task_definition_family` and `deploy_role_arn`. Container names in the workflow `images` input must be `ordering-agent` and `ordering-mcp`.

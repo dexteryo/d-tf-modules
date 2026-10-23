@@ -18,7 +18,7 @@ An IAM role that GitHub Actions assumes through OpenID Connect to build images a
 
 ```hcl
 module "deploy_role" {
-  source = "git::ssh://git@github.com/dexteryo/dex-tf-modules.git//modules/ci-oidc-role?ref=v0.2.0"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/ci-oidc-role?ref=v0.2.0"
 
   name              = "ordering"
   environment       = "integration"
@@ -32,7 +32,7 @@ module "deploy_role" {
 }
 ```
 
-Create one role per environment; pass `role_arn` as `role-to-assume` to the workflows in `dex-github-actions`. An account has a single GitHub OIDC provider: create it once (`create_oidc_provider = true` in one call) and pass its ARN everywhere else.
+Create one role per environment; pass `role_arn` as `role-to-assume` to the workflows in `d-github-actions`. An account has a single GitHub OIDC provider: create it once (`create_oidc_provider = true` in one call) and pass its ARN everywhere else.
 
 ## Permissions
 
@@ -107,7 +107,7 @@ No modules.
 | Name | Description |
 | ---- | ----------- |
 | oidc\_provider\_arn | ARN of the GitHub OIDC identity provider the role trusts |
-| role\_arn | ARN of the role; pass it as role-to-assume to the workflows of dex-github-actions |
+| role\_arn | ARN of the role; pass it as role-to-assume to the workflows of d-github-actions |
 | role\_name | Name of the role |
 | trust\_subject | The sub claim the role accepts, repo:<owner>/<name>:environment:<environment> |
 <!-- END_TF_DOCS -->

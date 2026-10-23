@@ -1,4 +1,4 @@
-# dex-tf-modules
+# d-tf-modules
 
 Small, single-purpose Terraform modules for running services on ECS Fargate. Each module owns one thing, takes tags from one place and is built to be composed.
 
@@ -18,7 +18,7 @@ Small, single-purpose Terraform modules for running services on ECS Fargate. Eac
 
 Not built yet: `lambda`. The reference lambda module bundles several packaging modes, tracing agents, container and placeholder images, aliases and secret wiring; it is not small. It is the next module once a workload needs it (see [CHANGELOG.md](CHANGELOG.md)).
 
-The companion repository `dex-github-actions` builds images, scans them, pushes them to ECR by digest and deploys new task definition revisions to a service created by these modules, promoting the same digest from one environment to the next.
+The companion repository `d-github-actions` builds images, scans them, pushes them to ECR by digest and deploys new task definition revisions to a service created by these modules, promoting the same digest from one environment to the next.
 
 ## Requirements
 

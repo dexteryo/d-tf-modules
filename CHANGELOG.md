@@ -2,6 +2,10 @@
 
 All notable changes to this repository are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [0.2.1] - 2026-10-23
+
+Repository renamed; references updated; no functional change.
+
 ## [0.2.0] - 2026-10-23
 
 The shared library is split into small, single-purpose modules, so that a workload composes the pieces it needs instead of taking one large module.

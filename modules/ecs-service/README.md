@@ -2,7 +2,7 @@
 
 One ECS Fargate service: task definition, service, target group and listener rule, log group, execution and task roles, optional autoscaling.
 
-Terraform owns the shape of the service. Deploys register new task definition revisions with the `ecs-deploy` action from `dex-github-actions`, so by default the service ignores `task_definition` and `desired_count` changes (`manage_task_definition_externally = true`).
+Terraform owns the shape of the service. Deploys register new task definition revisions with the `ecs-deploy` action from `d-github-actions`, so by default the service ignores `task_definition` and `desired_count` changes (`manage_task_definition_externally = true`).
 
 ## Owns
 
@@ -21,7 +21,7 @@ Terraform owns the shape of the service. Deploys register new task definition re
 
 ```hcl
 module "service" {
-  source = "git::ssh://git@github.com/dexteryo/dex-tf-modules.git//modules/ecs-service?ref=v0.2.0"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/ecs-service?ref=v0.2.0"
 
   name               = "ordering"
   environment        = "integration"

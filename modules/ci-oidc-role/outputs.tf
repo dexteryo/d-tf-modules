@@ -1,5 +1,5 @@
 output "role_arn" {
-  description = "ARN of the role; pass it as role-to-assume to the workflows of dex-github-actions"
+  description = "ARN of the role; pass it as role-to-assume to the workflows of d-github-actions"
   value       = aws_iam_role.this.arn
 }
 

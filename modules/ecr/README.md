@@ -9,7 +9,7 @@ One ECR repository: immutable tags, scan on push, KMS encryption, a lifecycle po
 
 ## Does not own
 
-- The images. Builds push digests with `dex-github-actions`; the deploy role of `ci-oidc-role` is the only push permission.
+- The images. Builds push digests with `d-github-actions`; the deploy role of `ci-oidc-role` is the only push permission.
 - The environment. One repository serves every environment because the same digest is promoted from one environment to the next; the module therefore takes no `environment`.
 
 ## Usage
@@ -17,7 +17,7 @@ One ECR repository: immutable tags, scan on push, KMS encryption, a lifecycle po
 ```hcl
 module "ecr" {
   for_each = toset(["ordering-agent", "ordering-mcp"])
-  source   = "git::ssh://git@github.com/dexteryo/dex-tf-modules.git//modules/ecr?ref=v0.2.0"
+  source   = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/ecr?ref=v0.2.0"
 
   name           = each.key
   create_kms_key = false
