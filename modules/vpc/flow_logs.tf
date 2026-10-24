@@ -38,10 +38,11 @@ resource "aws_iam_role_policy" "flow" {
 }
 
 resource "aws_flow_log" "this" {
-  vpc_id          = aws_vpc.this.id
-  traffic_type    = "ALL"
-  log_destination = aws_cloudwatch_log_group.flow.arn
-  iam_role_arn    = aws_iam_role.flow.arn
+  vpc_id               = aws_vpc.this.id
+  traffic_type         = "ALL"
+  log_destination_type = "cloud-watch-logs"
+  log_destination      = aws_cloudwatch_log_group.flow.arn
+  iam_role_arn         = aws_iam_role.flow.arn
 
   tags = var.tags
 }

@@ -145,8 +145,8 @@ run "flow_logs_capture_all_traffic_into_an_encrypted_group" {
   command = apply
 
   assert {
-    condition     = aws_flow_log.this.traffic_type == "ALL"
-    error_message = "Flow logs must capture accepted and rejected traffic."
+    condition     = aws_flow_log.this.traffic_type == "ALL" && aws_flow_log.this.log_destination_type == "cloud-watch-logs"
+    error_message = "Flow logs must capture accepted and rejected traffic into CloudWatch Logs."
   }
 
   assert {
