@@ -21,7 +21,7 @@ Terraform owns the shape of the service. Deploys register new task definition re
 
 ```hcl
 module "service" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/ecs-service?ref=v0.3.1"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/ecs-service?ref=v0.4.0"
 
   name               = "ordering"
   environment        = "integration"
