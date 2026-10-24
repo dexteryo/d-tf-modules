@@ -2,6 +2,12 @@
 
 All notable changes to this repository are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `modules/acm-certificate`: public ACM certificate validated by DNS in an existing Route 53 hosted zone, one validation record per distinct name, waits until the certificate is issued.
+
 ## [0.3.1] - 2026-10-24
 
 ### Added
