@@ -5,7 +5,7 @@ data "aws_region" "current" {}
 locals {
   full_name    = "${var.name}-${var.environment}"
   cluster_name = element(split("/", var.cluster_arn), length(split("/", var.cluster_arn)) - 1)
-  region       = data.aws_region.current.name
+  region       = data.aws_region.current.region
 
   tags = merge(var.tags, { Name = local.full_name })
 

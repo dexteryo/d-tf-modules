@@ -22,8 +22,8 @@ The companion repository `d-github-actions` builds images, scans them, pushes th
 
 ## Requirements
 
-- Terraform `>= 1.6` (the tests need `>= 1.7`; CI uses 1.8.3)
-- AWS provider `~> 5.0` (`ci-oidc-role` needs `>= 5.81`)
+- Terraform `>= 1.6` (the tests need `>= 1.7`; CI uses 1.15.3)
+- AWS provider `~> 6.0`
 - For development: `tflint`, `terraform-docs`, `trivy`, `shellcheck`, `python3`; optionally `pre-commit`
 
 ## How the pieces fit

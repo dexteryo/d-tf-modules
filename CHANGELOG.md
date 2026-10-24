@@ -2,6 +2,13 @@
 
 All notable changes to this repository are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- **Breaking:** every module now requires the AWS provider `~> 6.0` (was `~> 5.0`; `ci-oidc-role` was `>= 5.81, < 6.0`). Callers on 5.x must upgrade the provider before taking this version.
+- CI runs Terraform 1.15.3 (was 1.8.3).
+
 ## [0.2.1] - 2026-10-23
 
 Repository renamed; references updated; no functional change.
