@@ -6,6 +6,7 @@ Small, single-purpose Terraform modules for running services on ECS Fargate. Eac
 | --- | --- |
 | [`modules/tags`](modules/tags) | Mandatory, optional and custom tags; the `all_tags` map every other module takes |
 | [`modules/kms`](modules/kms) | One rotating KMS key and alias with a key policy built from named inputs |
+| [`modules/s3-bucket`](modules/s3-bucket) | One private, KMS-encrypted, versioned bucket; optional compliance-mode Object Lock and CloudFront read access |
 | [`modules/ecr`](modules/ecr) | One immutable, scanned, encrypted repository with a lifecycle policy |
 | [`modules/security-group`](modules/security-group) | One security group whose rules are inputs; closed by default |
 | [`modules/ecs-cluster`](modules/ecs-cluster) | Fargate cluster with Container Insights and optional ECS Exec logging |
