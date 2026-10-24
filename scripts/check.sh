@@ -4,6 +4,8 @@ set -euo pipefail
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$root"
 
+export TF_PLUGIN_CACHE_DIR="${TF_PLUGIN_CACHE_DIR:-$(mktemp -d)}"
+
 step() {
   printf '\n== %s\n' "$1"
 }
