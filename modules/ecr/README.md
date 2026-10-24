@@ -17,7 +17,7 @@ One ECR repository: immutable tags, scan on push, KMS encryption, a lifecycle po
 ```hcl
 module "ecr" {
   for_each = toset(["ordering-agent", "ordering-mcp"])
-  source   = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/ecr?ref=v0.3.0"
+  source   = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/ecr?ref=v0.4.0"
 
   name           = each.key
   create_kms_key = false
