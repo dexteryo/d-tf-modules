@@ -355,3 +355,74 @@ run "application_policy_is_attached_only_when_given" {
     error_message = "The task role has no permissions unless a policy is passed."
   }
 }
+
+run "container_command_and_entry_point_are_omitted_by_default" {
+  command = apply
+
+  assert {
+    condition     = alltrue([for c in jsondecode(aws_ecs_task_definition.this.container_definitions) : !contains(keys(c), "command") && !contains(keys(c), "entryPoint")])
+    error_message = "Without command and entry_point the image defaults must be kept."
+  }
+}
+
+run "container_command_and_entry_point_override_the_image" {
+  command = apply
+
+  variables {
+    containers = [
+      {
+        name        = "agent"
+        image       = "123456789012.dkr.ecr.eu-west-1.amazonaws.com/example/agent:placeholder"
+        port        = 8788
+        entry_point = ["bash", "-c"]
+        command     = ["echo starting && exec /app/run"]
+      },
+    ]
+  }
+
+  assert {
+    condition     = one(jsondecode(aws_ecs_task_definition.this.container_definitions)).entryPoint == ["bash", "-c"] && one(jsondecode(aws_ecs_task_definition.this.container_definitions)).command == ["echo starting && exec /app/run"]
+    error_message = "command and entry_point must reach the container definition as given."
+  }
+}
+
+run "target_group_health_check_timing_is_applied" {
+  command = apply
+
+  variables {
+    load_balancer = {
+      container_name        = "agent"
+      container_port        = 8788
+      vpc_id                = "vpc-0123456789abcdef0"
+      listener_arn          = "arn:aws:elasticloadbalancing:eu-west-1:123456789012:listener/app/example/0123456789abcdef/0123456789abcdef"
+      host_headers          = ["agent.example.com"]
+      priority              = 100
+      health_check_interval = 30
+      health_check_timeout  = 10
+    }
+  }
+
+  assert {
+    condition     = aws_lb_target_group.this[0].health_check[0].interval == 30 && aws_lb_target_group.this[0].health_check[0].timeout == 10
+    error_message = "The target group health check must use the given interval and timeout."
+  }
+}
+
+run "health_check_timeout_not_shorter_than_interval_is_rejected" {
+  command = plan
+
+  variables {
+    load_balancer = {
+      container_name        = "agent"
+      container_port        = 8788
+      vpc_id                = "vpc-0123456789abcdef0"
+      listener_arn          = "arn:aws:elasticloadbalancing:eu-west-1:123456789012:listener/app/example/0123456789abcdef/0123456789abcdef"
+      host_headers          = ["agent.example.com"]
+      priority              = 100
+      health_check_interval = 10
+      health_check_timeout  = 10
+    }
+  }
+
+  expect_failures = [var.load_balancer]
+}

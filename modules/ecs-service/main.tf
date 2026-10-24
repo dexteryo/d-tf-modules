@@ -41,8 +41,10 @@ resource "aws_lb_target_group" "this" {
   deregistration_delay = var.load_balancer.deregistration_delay
 
   health_check {
-    path    = var.load_balancer.health_check_path
-    matcher = var.load_balancer.health_check_matcher
+    path     = var.load_balancer.health_check_path
+    matcher  = var.load_balancer.health_check_matcher
+    interval = var.load_balancer.health_check_interval
+    timeout  = var.load_balancer.health_check_timeout
   }
 
   tags = local.tags

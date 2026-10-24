@@ -21,7 +21,7 @@ Terraform owns the shape of the service. Deploys register new task definition re
 
 ```hcl
 module "service" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/ecs-service?ref=v0.3.0"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/ecs-service?ref=v0.3.1"
 
   name               = "ordering"
   environment        = "integration"
@@ -57,8 +57,9 @@ See `examples/ordering-agent` for a two-container task wired to every other modu
 - **Names.** Everything is named `<name>-<environment>`. The task definition family is `<name>-<environment>` (output `task_definition_family`).
 - **Read-only root filesystem.** Defaults to `true` per container. Set `read_only_root_filesystem = false` only for a container that must write to its filesystem.
 - **Health checks.** Container health checks run inside the task, so use `127.0.0.1` rather than `localhost` (`localhost` can resolve to `::1`, where many servers do not listen). With `default_health_check_path` set, every container that has a `port` and no `health_check` gets `curl -fsS http://127.0.0.1:<port><path>`; the image must contain `curl`.
+- **Command and entry point.** `command` and `entry_point` on a container replace the image's `CMD` and `ENTRYPOINT`. Leave them unset to keep the image defaults. A container that writes files at start (for example to import configuration) also needs `read_only_root_filesystem = false`.
 - **Sidecars.** A container without `port` is never reachable from the load balancer. Containers share one network namespace under `awsvpc`, so a sidecar listening on `127.0.0.1` is reachable by the other containers and by nothing else. Use `depends_on` with `HEALTHY` (needs a `health_check` on the dependency) or `START`.
-- **Load balancer.** The target group uses `target_type = "ip"` and lives in `load_balancer.vpc_id`. At least one of `host_headers` or `path_patterns` is required. `health_check_grace_period_seconds` only applies when a load balancer is set. Open the container port to the load balancer in the group you pass in `security_group_ids`.
+- **Load balancer.** The target group uses `target_type = "ip"` and lives in `load_balancer.vpc_id`. At least one of `host_headers` or `path_patterns` is required. `health_check_grace_period_seconds` only applies when a load balancer is set. Open the container port to the load balancer in the group you pass in `security_group_ids`. `health_check_interval` and `health_check_timeout` (seconds, timeout shorter than interval) set the target group's health check timing; unset, the load balancer defaults apply. A service that Terraform itself should redeploy when its task definition changes needs `manage_task_definition_externally = false`.
 - **Two service resources.** Terraform cannot make `lifecycle.ignore_changes` conditional, so `aws_ecs_service.externally_managed` and `aws_ecs_service.terraform_managed` carry identical settings and exactly one exists. Switching the variable on a live service destroys and recreates the service.
 
 ## IAM
@@ -147,7 +148,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
 | cluster\_arn | ARN of the ECS cluster the service runs in | `string` | n/a | yes |
-| containers | Containers of the task. secrets maps an environment variable name to a Secrets Manager or SSM parameter ARN, optionally suffixed with :json-key:: | ```list(object({ name = string image = string essential = optional(bool, true) port = optional(number) cpu = optional(number) memory = optional(number) environment = optional(map(string), {}) secrets = optional(map(string), {}) health_check = optional(object({ command = list(string) interval = optional(number, 30) timeout = optional(number, 5) retries = optional(number, 3) start_period = optional(number, 0) })) depends_on = optional(list(object({ container_name = string condition = string })), []) read_only_root_filesystem = optional(bool, true) }))``` | n/a | yes |
+| containers | Containers of the task. secrets maps an environment variable name to a Secrets Manager or SSM parameter ARN, optionally suffixed with :json-key::. command and entry\_point override the image CMD and ENTRYPOINT | ```list(object({ name = string image = string essential = optional(bool, true) port = optional(number) cpu = optional(number) memory = optional(number) environment = optional(map(string), {}) secrets = optional(map(string), {}) health_check = optional(object({ command = list(string) interval = optional(number, 30) timeout = optional(number, 5) retries = optional(number, 3) start_period = optional(number, 0) })) depends_on = optional(list(object({ container_name = string condition = string })), []) command = optional(list(string)) entry_point = optional(list(string)) read_only_root_filesystem = optional(bool, true) }))``` | n/a | yes |
 | cpu | Task CPU units (256, 512, 1024, ...) | `number` | n/a | yes |
 | environment | Deployment environment (for example integration, staging, production) | `string` | n/a | yes |
 | memory | Task memory in MiB | `number` | n/a | yes |
@@ -166,7 +167,7 @@ No modules.
 | extra\_execution\_secret\_arns | Additional Secrets Manager or SSM parameter ARNs the execution role may read | `list(string)` | `[]` | no |
 | health\_check\_grace\_period\_seconds | Seconds ECS ignores failing load balancer health checks after a task starts. Only used with load\_balancer | `number` | `60` | no |
 | kms\_key\_arns | KMS keys the execution role may decrypt (secrets encrypted with a customer-managed key) | `list(string)` | `[]` | no |
-| load\_balancer | Attach the service to an existing ALB listener with a target group and a listener rule. Set at least one of host\_headers or path\_patterns. The ALB, its listener and the security group rules are owned by the alb and security-group modules | ```object({ container_name = string container_port = number vpc_id = string listener_arn = string host_headers = optional(list(string), []) path_patterns = optional(list(string), []) priority = number health_check_path = optional(string, "/") health_check_matcher = optional(string, "200") deregistration_delay = optional(number, 30) })``` | `null` | no |
+| load\_balancer | Attach the service to an existing ALB listener with a target group and a listener rule. Set at least one of host\_headers or path\_patterns. health\_check\_interval and health\_check\_timeout are in seconds and default to the load balancer defaults. The ALB, its listener and the security group rules are owned by the alb and security-group modules | ```object({ container_name = string container_port = number vpc_id = string listener_arn = string host_headers = optional(list(string), []) path_patterns = optional(list(string), []) priority = number health_check_path = optional(string, "/") health_check_matcher = optional(string, "200") health_check_interval = optional(number) health_check_timeout = optional(number) deregistration_delay = optional(number, 30) })``` | `null` | no |
 | log\_kms\_key\_arn | KMS key ARN used to encrypt the service log group | `string` | `null` | no |
 | log\_retention\_days | CloudWatch log retention in days | `number` | `30` | no |
 | manage\_task\_definition\_externally | Ignore task\_definition and desired\_count changes on the service because deploys register new revisions outside Terraform | `bool` | `true` | no |
