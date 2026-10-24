@@ -90,7 +90,7 @@ The reference module chunks very long CIDR lists over several security groups, c
 | Name | Version |
 | ---- | ------- |
 | terraform | >= 1.6 |
-| aws | ~> 5.0 |
+| aws | ~> 6.0 |
 
 ## Providers
 

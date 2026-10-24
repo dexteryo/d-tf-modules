@@ -68,7 +68,7 @@ The reference "standard" group is a fixed list of egress destinations for one or
 | Name | Version |
 | ---- | ------- |
 | terraform | >= 1.6 |
-| aws | ~> 5.0 |
+| aws | ~> 6.0 |
 
 ## Providers
 

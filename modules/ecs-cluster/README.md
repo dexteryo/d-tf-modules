@@ -50,7 +50,7 @@ The reference cluster modules also manage EC2 container instances, auto scaling 
 | Name | Version |
 | ---- | ------- |
 | terraform | >= 1.6 |
-| aws | ~> 5.0 |
+| aws | ~> 6.0 |
 
 ## Providers
 

@@ -61,7 +61,7 @@ The reference module takes every alarm as a string-typed object and always creat
 | Name | Version |
 | ---- | ------- |
 | terraform | >= 1.6 |
-| aws | ~> 5.0 |
+| aws | ~> 6.0 |
 
 ## Providers
 

@@ -46,7 +46,7 @@ The reference module creates email subscriptions through a CloudFormation stack,
 | Name | Version |
 | ---- | ------- |
 | terraform | >= 1.6 |
-| aws | ~> 5.0 |
+| aws | ~> 6.0 |
 
 ## Providers
 

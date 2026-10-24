@@ -61,7 +61,7 @@ The reference module is built on the policy-document data source, has an "overri
 | Name | Version |
 | ---- | ------- |
 | terraform | >= 1.6 |
-| aws | ~> 5.0 |
+| aws | ~> 6.0 |
 
 ## Providers
 

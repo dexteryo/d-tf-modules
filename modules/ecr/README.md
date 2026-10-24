@@ -52,7 +52,7 @@ The reference module can share a repository with every account of an organisatio
 | Name | Version |
 | ---- | ------- |
 | terraform | >= 1.6 |
-| aws | ~> 5.0 |
+| aws | ~> 6.0 |
 
 ## Providers
 
