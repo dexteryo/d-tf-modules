@@ -7,6 +7,7 @@ All notable changes to this repository are documented here. The format follows [
 ### Added
 
 - `modules/s3-bucket`: private bucket with KMS encryption, versioning, Block Public Access, TLS-only policy, optional compliance-mode Object Lock and optional CloudFront origin access control read access.
+- `modules/vpc`: three-tier VPC over 2 to 6 zones with a NAT gateway and Elastic IP per zone, S3 and interface endpoints, KMS-encrypted flow logs and an emptied default security group.
 
 ### Changed
 
