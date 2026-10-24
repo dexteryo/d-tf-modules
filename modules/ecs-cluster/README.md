@@ -16,7 +16,7 @@ One ECS cluster for Fargate: Container Insights, the `FARGATE` and `FARGATE_SPOT
 
 ```hcl
 module "cluster" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/ecs-cluster?ref=v0.2.0"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/ecs-cluster?ref=v0.3.0"
 
   name        = "ordering"
   environment = "integration"

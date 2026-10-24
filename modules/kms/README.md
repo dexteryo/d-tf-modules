@@ -16,7 +16,7 @@ One customer-managed KMS key with an alias, rotation always on and a key policy 
 
 ```hcl
 module "app_key" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/kms?ref=v0.2.0"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/kms?ref=v0.3.0"
 
   name        = "ordering"
   environment = "integration"

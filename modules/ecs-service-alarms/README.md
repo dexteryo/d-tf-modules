@@ -18,7 +18,7 @@ CloudWatch alarms for one ECS service and, optionally, the load balancer in fron
 
 ```hcl
 module "alarms" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/ecs-service-alarms?ref=v0.2.0"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/ecs-service-alarms?ref=v0.3.0"
 
   name          = "ordering"
   environment   = "integration"
