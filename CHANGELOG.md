@@ -10,6 +10,7 @@ All notable changes to this repository are documented here. The format follows [
 
 ### Changed
 
+- `modules/s3-bucket`: `name` must not be empty, `kms_key_arn` no longer accepts null (it would have fallen back to the AWS-managed key), and the two lifecycle day inputs must be at least 1.
 - **Breaking:** every module now requires the AWS provider `~> 6.0` (was `~> 5.0`; `ci-oidc-role` was `>= 5.81, < 6.0`). Callers on 5.x must upgrade the provider before taking this version.
 - CI runs Terraform 1.15.3 (was 1.8.3).
 

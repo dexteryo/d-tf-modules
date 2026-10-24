@@ -143,3 +143,24 @@ run "zero_day_retention_is_rejected" {
 
   expect_failures = [var.object_lock_retention_days]
 }
+
+run "empty_name_is_rejected" {
+  command = plan
+
+  variables {
+    name = " "
+  }
+
+  expect_failures = [var.name]
+}
+
+run "zero_day_lifecycle_settings_are_rejected" {
+  command = plan
+
+  variables {
+    noncurrent_version_expiration_days     = 0
+    abort_incomplete_multipart_upload_days = 0
+  }
+
+  expect_failures = [var.noncurrent_version_expiration_days, var.abort_incomplete_multipart_upload_days]
+}

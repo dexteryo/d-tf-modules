@@ -1,6 +1,12 @@
 variable "name" {
   description = "Workload name. The bucket is named <name>-<environment>[-<name_suffix>][-<account id>]"
   type        = string
+  nullable    = false
+
+  validation {
+    condition     = length(trimspace(var.name)) > 0
+    error_message = "name must not be empty."
+  }
 }
 
 variable "environment" {
@@ -30,6 +36,7 @@ variable "tags" {
 variable "kms_key_arn" {
   description = "Customer-managed key that encrypts the objects"
   type        = string
+  nullable    = false
 }
 
 variable "object_lock_retention_days" {
@@ -53,10 +60,20 @@ variable "noncurrent_version_expiration_days" {
   description = "Days before superseded object versions expire. Ignored while Object Lock is on, because locked versions cannot be removed"
   type        = number
   default     = 90
+
+  validation {
+    condition     = var.noncurrent_version_expiration_days >= 1
+    error_message = "noncurrent_version_expiration_days must be at least 1."
+  }
 }
 
 variable "abort_incomplete_multipart_upload_days" {
   description = "Days after which an unfinished multipart upload is aborted"
   type        = number
   default     = 7
+
+  validation {
+    condition     = var.abort_incomplete_multipart_upload_days >= 1
+    error_message = "abort_incomplete_multipart_upload_days must be at least 1."
+  }
 }
