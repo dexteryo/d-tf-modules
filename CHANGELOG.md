@@ -9,6 +9,8 @@ All notable changes to this repository are documented here. The format follows [
 - `modules/s3-bucket`: private bucket with KMS encryption, versioning, Block Public Access, TLS-only policy, optional compliance-mode Object Lock and optional CloudFront origin access control read access.
 - `modules/vpc`: three-tier VPC over 2 to 6 zones with a NAT gateway and Elastic IP per zone, S3 and interface endpoints, KMS-encrypted flow logs and an emptied default security group.
 - `modules/rds-postgres`: encrypted, private, TLS-only PostgreSQL instance with a managed administrator secret, generated credentials per application role, PostgreSQL logs, a free-storage alarm and an optional RDS Proxy.
+- `modules/waf-web-acl`: CloudFront web ACL with configurable AWS managed rule groups, an optional per-IP rate limit and a KMS-encrypted log group with redacted headers, path and query string.
+- `modules/cloudfront-spa`: CloudFront distribution for a single-page app served from a private S3 bucket through origin access control, with a route rewrite function, security headers, optional CloudWatch access logs and optional backend paths to an internal load balancer through a VPC origin.
 
 ### Changed
 
