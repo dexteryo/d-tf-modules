@@ -62,7 +62,7 @@ variable "desired_count" {
 }
 
 variable "containers" {
-  description = "Containers of the task. secrets maps an environment variable name to a Secrets Manager or SSM parameter ARN, optionally suffixed with :json-key::"
+  description = "Containers of the task. secrets maps an environment variable name to a Secrets Manager or SSM parameter ARN, optionally suffixed with :json-key::. command and entry_point override the image CMD and ENTRYPOINT"
   type = list(object({
     name      = string
     image     = string
@@ -87,6 +87,8 @@ variable "containers" {
       condition      = string
     })), [])
 
+    command                   = optional(list(string))
+    entry_point               = optional(list(string))
     read_only_root_filesystem = optional(bool, true)
   }))
 
@@ -122,20 +124,27 @@ variable "default_health_check_path" {
 }
 
 variable "load_balancer" {
-  description = "Attach the service to an existing ALB listener with a target group and a listener rule. Set at least one of host_headers or path_patterns. The ALB, its listener and the security group rules are owned by the alb and security-group modules"
+  description = "Attach the service to an existing ALB listener with a target group and a listener rule. Set at least one of host_headers or path_patterns. health_check_interval and health_check_timeout are in seconds and default to the load balancer defaults. The ALB, its listener and the security group rules are owned by the alb and security-group modules"
   type = object({
-    container_name       = string
-    container_port       = number
-    vpc_id               = string
-    listener_arn         = string
-    host_headers         = optional(list(string), [])
-    path_patterns        = optional(list(string), [])
-    priority             = number
-    health_check_path    = optional(string, "/")
-    health_check_matcher = optional(string, "200")
-    deregistration_delay = optional(number, 30)
+    container_name        = string
+    container_port        = number
+    vpc_id                = string
+    listener_arn          = string
+    host_headers          = optional(list(string), [])
+    path_patterns         = optional(list(string), [])
+    priority              = number
+    health_check_path     = optional(string, "/")
+    health_check_matcher  = optional(string, "200")
+    health_check_interval = optional(number)
+    health_check_timeout  = optional(number)
+    deregistration_delay  = optional(number, 30)
   })
   default = null
+
+  validation {
+    condition     = var.load_balancer == null ? true : (var.load_balancer.health_check_interval == null || var.load_balancer.health_check_timeout == null || var.load_balancer.health_check_timeout < var.load_balancer.health_check_interval)
+    error_message = "load_balancer.health_check_timeout must be shorter than health_check_interval."
+  }
 
   validation {
     condition     = var.load_balancer == null ? true : length(var.load_balancer.host_headers) + length(var.load_balancer.path_patterns) > 0

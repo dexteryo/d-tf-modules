@@ -2,6 +2,13 @@
 
 All notable changes to this repository are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [0.3.1] - 2026-10-24
+
+### Added
+
+- `modules/ecs-service`: optional `command` and `entry_point` on each container, for images that need their `CMD` or `ENTRYPOINT` replaced.
+- `modules/ecs-service`: optional `health_check_interval` and `health_check_timeout` in `load_balancer`, with a validation that the timeout is shorter than the interval.
+
 ## [0.3.0] - 2026-10-24
 
 Adds the modules a three-tier web application on AWS needs (network, database, static app bucket, edge and web ACL) and moves the whole library to the AWS provider 6.x.

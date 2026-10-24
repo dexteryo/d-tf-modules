@@ -56,6 +56,8 @@ locals {
       [for _ in(length(c.depends_on) > 0 ? [1] : []) : {
         dependsOn = [for d in c.depends_on : { containerName = d.container_name, condition = d.condition }]
       }],
+      [for _ in(c.command != null ? [1] : []) : { command = c.command }],
+      [for _ in(c.entry_point != null ? [1] : []) : { entryPoint = c.entry_point }],
       [for _ in(c.cpu != null ? [1] : []) : { cpu = c.cpu }],
       [for _ in(c.memory != null ? [1] : []) : { memory = c.memory }]
     )...)
