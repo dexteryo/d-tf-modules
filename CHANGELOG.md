@@ -2,7 +2,9 @@
 
 All notable changes to this repository are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.3.0] - 2026-10-24
+
+Adds the modules a three-tier web application on AWS needs (network, database, static app bucket, edge and web ACL) and moves the whole library to the AWS provider 6.x.
 
 ### Added
 
@@ -17,6 +19,12 @@ All notable changes to this repository are documented here. The format follows [
 - `modules/s3-bucket`: `name` must not be empty, `kms_key_arn` no longer accepts null (it would have fallen back to the AWS-managed key), and the two lifecycle day inputs must be at least 1.
 - **Breaking:** every module now requires the AWS provider `~> 6.0` (was `~> 5.0`; `ci-oidc-role` was `>= 5.81, < 6.0`). Callers on 5.x must upgrade the provider before taking this version.
 - CI runs Terraform 1.15.3 (was 1.8.3).
+
+### Migration from v0.2.x
+
+1. Upgrade the AWS provider constraint of every root module that uses these modules to `~> 6.0`, and run `terraform init -upgrade`.
+2. Replace `data.aws_region.<name>.name` with `.region` in your own code if you use it; the modules already do.
+3. Change `?ref=v0.2.x` to `?ref=v0.3.0` and run `terraform plan`. The existing modules have no input or output changes, so the plan should show only what the provider upgrade itself changes.
 
 ## [0.2.1] - 2026-10-23
 
