@@ -1,4 +1,10 @@
 mock_provider "aws" {
+  mock_data "aws_region" {
+    defaults = {
+      region = "eu-west-1"
+    }
+  }
+
   mock_resource "aws_iam_role" {
     defaults = {
       arn = "arn:aws:iam::123456789012:role/example"
@@ -211,6 +217,11 @@ run "proxy_signs_in_as_the_chosen_roles_only" {
   }
 
   assert {
+    condition     = jsondecode(aws_iam_role_policy.proxy[0].policy).Statement[1].Condition.StringEquals["kms:ViaService"] == "secretsmanager.eu-west-1.amazonaws.com"
+    error_message = "The proxy may use the data key only through Secrets Manager."
+  }
+
+  assert {
     condition     = aws_db_proxy_target.this[0].db_instance_identifier == "ordering-integration-postgres"
     error_message = "The proxy targets the instance."
   }
@@ -251,4 +262,27 @@ run "backup_retention_beyond_35_days_is_rejected" {
   }
 
   expect_failures = [var.backup_retention_days]
+}
+
+run "proxy_without_roles_is_rejected" {
+  command = plan
+
+  variables {
+    proxy = {
+      role_names         = []
+      security_group_ids = ["sg-0fedcba9876543210"]
+    }
+  }
+
+  expect_failures = [var.proxy]
+}
+
+run "instance_without_security_groups_is_rejected" {
+  command = plan
+
+  variables {
+    security_group_ids = []
+  }
+
+  expect_failures = [var.security_group_ids]
 }

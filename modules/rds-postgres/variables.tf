@@ -34,6 +34,11 @@ variable "subnet_ids" {
 variable "security_group_ids" {
   description = "Security groups of the instance. They decide who can connect; build them with the security-group module"
   type        = list(string)
+
+  validation {
+    condition     = length(var.security_group_ids) >= 1
+    error_message = "security_group_ids must contain at least one security group, or RDS falls back to the VPC default group."
+  }
 }
 
 variable "data_kms_key_arn" {
@@ -151,4 +156,9 @@ variable "proxy" {
     idle_client_timeout = optional(number, 1800)
   })
   default = null
+
+  validation {
+    condition     = var.proxy == null || (length(var.proxy.role_names) >= 1 && length(var.proxy.security_group_ids) >= 1)
+    error_message = "proxy needs at least one role name and one security group."
+  }
 }

@@ -17,7 +17,7 @@ One RDS for PostgreSQL instance that is encrypted, private and TLS-only, with ge
 - The network. Pass isolated subnets from `modules/vpc`.
 - The keys. Create them with `modules/kms`.
 - The databases and roles inside PostgreSQL. Terraform cannot reach an isolated instance, so a bootstrap step in the caller (for example a one-off ECS task) creates them, reads the administrator secret from `master_user_secret_arn` and each role's password from `role_secret_arns`, and makes the roles match.
-- Secret rotation.
+- Secret rotation. Passwords change only when Terraform regenerates one (for example `terraform apply -replace='module.database.random_password.role["ordering_api"]'`). The secret then holds the new value, and the bootstrap step must run again to set it in PostgreSQL. Until it does, the secret and the database disagree.
 
 ## Usage
 
@@ -105,6 +105,7 @@ No modules.
 | [aws_secretsmanager_secret.role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
 | [aws_secretsmanager_secret_version.role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
 | [random_password.role](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
+| [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 

@@ -1,3 +1,5 @@
+data "aws_region" "current" {}
+
 locals {
   proxy_enabled = var.proxy != null
   proxy_roles   = local.proxy_enabled ? var.proxy.role_names : toset([])
@@ -37,6 +39,9 @@ resource "aws_iam_role_policy" "proxy" {
         Effect   = "Allow"
         Action   = "kms:Decrypt"
         Resource = var.data_kms_key_arn
+        Condition = {
+          StringEquals = { "kms:ViaService" = "secretsmanager.${data.aws_region.current.region}.amazonaws.com" }
+        }
       },
     ]
   })
