@@ -4,6 +4,10 @@ All notable changes to this repository are documented here. The format follows [
 
 ## [Unreleased]
 
+### Added
+
+- `modules/s3-bucket`: private bucket with KMS encryption, versioning, Block Public Access, TLS-only policy, optional compliance-mode Object Lock and optional CloudFront origin access control read access.
+
 ### Changed
 
 - **Breaking:** every module now requires the AWS provider `~> 6.0` (was `~> 5.0`; `ci-oidc-role` was `>= 5.81, < 6.0`). Callers on 5.x must upgrade the provider before taking this version.
