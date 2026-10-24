@@ -74,7 +74,7 @@ The reference "standard" group is a fixed list of egress destinations for one or
 
 | Name | Version |
 | ---- | ------- |
-| aws | 5.100.0 |
+| aws | 6.70.0 |
 
 ## Modules
 

@@ -67,7 +67,7 @@ The reference module takes every alarm as a string-typed object and always creat
 
 | Name | Version |
 | ---- | ------- |
-| aws | 5.100.0 |
+| aws | 6.70.0 |
 
 ## Modules
 

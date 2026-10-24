@@ -96,7 +96,7 @@ The reference module chunks very long CIDR lists over several security groups, c
 
 | Name | Version |
 | ---- | ------- |
-| aws | 5.100.0 |
+| aws | 6.70.0 |
 
 ## Modules
 

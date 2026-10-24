@@ -58,7 +58,7 @@ The reference module can share a repository with every account of an organisatio
 
 | Name | Version |
 | ---- | ------- |
-| aws | 5.100.0 |
+| aws | 6.70.0 |
 
 ## Modules
 

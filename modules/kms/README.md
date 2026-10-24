@@ -67,7 +67,7 @@ The reference module is built on the policy-document data source, has an "overri
 
 | Name | Version |
 | ---- | ------- |
-| aws | 5.100.0 |
+| aws | 6.70.0 |
 
 ## Modules
 
