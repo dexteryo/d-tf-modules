@@ -8,6 +8,7 @@ Small, single-purpose Terraform modules for running services on ECS Fargate. Eac
 | [`modules/kms`](modules/kms) | One rotating KMS key and alias with a key policy built from named inputs |
 | [`modules/s3-bucket`](modules/s3-bucket) | One private, KMS-encrypted, versioned bucket; optional compliance-mode Object Lock and CloudFront read access |
 | [`modules/vpc`](modules/vpc) | Three-tier VPC: public, private and isolated subnets, a NAT gateway per zone, endpoints, flow logs |
+| [`modules/rds-postgres`](modules/rds-postgres) | Encrypted, private, TLS-only PostgreSQL with per-role secrets and an optional RDS Proxy |
 | [`modules/ecr`](modules/ecr) | One immutable, scanned, encrypted repository with a lifecycle policy |
 | [`modules/security-group`](modules/security-group) | One security group whose rules are inputs; closed by default |
 | [`modules/ecs-cluster`](modules/ecs-cluster) | Fargate cluster with Container Insights and optional ECS Exec logging |

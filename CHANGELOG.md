@@ -8,6 +8,7 @@ All notable changes to this repository are documented here. The format follows [
 
 - `modules/s3-bucket`: private bucket with KMS encryption, versioning, Block Public Access, TLS-only policy, optional compliance-mode Object Lock and optional CloudFront origin access control read access.
 - `modules/vpc`: three-tier VPC over 2 to 6 zones with a NAT gateway and Elastic IP per zone, S3 and interface endpoints, KMS-encrypted flow logs and an emptied default security group.
+- `modules/rds-postgres`: encrypted, private, TLS-only PostgreSQL instance with a managed administrator secret, generated credentials per application role, PostgreSQL logs, a free-storage alarm and an optional RDS Proxy.
 
 ### Changed
 
