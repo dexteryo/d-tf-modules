@@ -30,6 +30,20 @@ variable "github_repository" {
   }
 }
 
+variable "github_immutable_ids" {
+  description = "Numeric owner and repository IDs, for repositories that use GitHub's immutable OIDC subject claims. The trust policy then matches repo:<owner>@<owner_id>/<name>@<repository_id>, which a recreated or renamed repository cannot reuse"
+  type = object({
+    owner_id      = number
+    repository_id = number
+  })
+  default = null
+
+  validation {
+    condition     = var.github_immutable_ids == null ? true : alltrue([for id in [var.github_immutable_ids.owner_id, var.github_immutable_ids.repository_id] : id > 0 && floor(id) == id])
+    error_message = "github_immutable_ids must hold positive whole numbers."
+  }
+}
+
 variable "github_environment" {
   description = "GitHub environment whose jobs may assume the role. Defaults to the environment variable. Protection rules on that GitHub environment are the deploy gate"
   type        = string

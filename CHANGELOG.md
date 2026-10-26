@@ -2,6 +2,12 @@
 
 All notable changes to this repository are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `modules/ci-oidc-role`: optional `github_immutable_ids` (`owner_id`, `repository_id`) for repositories with GitHub's immutable OIDC subject claims. The trust policy then matches `repo:<owner>@<owner_id>/<name>@<repository_id>:environment:<environment>` exactly; without it, tokens from such a repository were refused.
+
 ## [0.5.0] - 2026-10-26
 
 ### Added

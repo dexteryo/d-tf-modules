@@ -1,9 +1,14 @@
 locals {
   full_name          = join("-", compact([var.name, var.environment, var.name_suffix]))
   github_environment = coalesce(var.github_environment, var.environment)
-  subject            = "repo:${var.github_repository}:environment:${local.github_environment}"
-  provider_host      = "token.actions.githubusercontent.com"
-  provider_arn       = var.create_oidc_provider ? aws_iam_openid_connect_provider.github[0].arn : var.oidc_provider_arn
+  repository_claim = var.github_immutable_ids == null ? var.github_repository : format(
+    "%s@%d/%s@%d",
+    split("/", var.github_repository)[0], var.github_immutable_ids.owner_id,
+    split("/", var.github_repository)[1], var.github_immutable_ids.repository_id,
+  )
+  subject       = "repo:${local.repository_claim}:environment:${local.github_environment}"
+  provider_host = "token.actions.githubusercontent.com"
+  provider_arn  = var.create_oidc_provider ? aws_iam_openid_connect_provider.github[0].arn : var.oidc_provider_arn
 
   statements = concat(
     [{

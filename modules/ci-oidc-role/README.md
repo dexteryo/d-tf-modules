@@ -5,7 +5,7 @@ An IAM role that GitHub Actions assumes through OpenID Connect to build images a
 ## Owns
 
 - `aws_iam_role` named `<name>-<environment>-<name_suffix>` (suffix `deploy`) and its inline `deploy` policy.
-- The trust policy: `sts:AssumeRoleWithWebIdentity` from the GitHub OIDC provider where `aud` is `sts.amazonaws.com` and `sub` is exactly `repo:<owner>/<name>:environment:<environment>`.
+- The trust policy: `sts:AssumeRoleWithWebIdentity` from the GitHub OIDC provider where `aud` is `sts.amazonaws.com` and `sub` is exactly `repo:<owner>/<name>:environment:<environment>`, or `repo:<owner>@<owner_id>/<name>@<repository_id>:environment:<environment>` when `github_immutable_ids` is set.
 - Optionally the GitHub OIDC identity provider itself (`create_oidc_provider`).
 
 ## Does not own
@@ -36,6 +36,8 @@ module "deploy_role" {
 }
 ```
 
+If the repository uses GitHub's immutable OIDC subject claims (`use_immutable_subject` in `GET /repos/<owner>/<name>/actions/oidc/customization/sub`), its tokens carry the numeric IDs and the plain subject never matches; pass `github_immutable_ids`. The IDs are the `id` fields of `GET /repos/<owner>/<name>` and its `owner`.
+
 Create one role per environment; pass `role_arn` as `role-to-assume` to the workflows in `d-github-actions`. An account has a single GitHub OIDC provider: create it once (`create_oidc_provider = true` in one call) and pass its ARN everywhere else.
 
 ## Permissions
@@ -60,7 +62,7 @@ The reference module creates a family of roles per account type (branch and prot
 
 ## Tests
 
-`terraform test` with `mock_provider "aws"` covers the trust scoping (repository, environment, audience, no pattern match), the GitHub environment override, naming, the wildcard allow-list, service and repository scoping, the `PassRole` condition, static site bucket, key and distribution scoping, omitted statements, creating the provider and the input validations, including wildcard bucket, key and distribution ARNs, KMS alias ARNs and bare distribution IDs.
+`terraform test` with `mock_provider "aws"` covers the trust scoping (repository, environment, audience, no pattern match), the immutable subject with numeric IDs, the GitHub environment override, naming, the wildcard allow-list, service and repository scoping, the `PassRole` condition, static site bucket, key and distribution scoping, omitted statements, creating the provider and the input validations, including wildcard bucket, key and distribution ARNs, KMS alias ARNs and bare distribution IDs.
 
 ## Example
 
@@ -104,6 +106,7 @@ No modules.
 | ecr\_repository\_arns | ECR repositories the role may push images to and read from | `list(string)` | `[]` | no |
 | ecs\_service\_arns | ECS services the role may update and describe. Registering task definitions is allowed whenever this list is not empty | `list(string)` | `[]` | no |
 | github\_environment | GitHub environment whose jobs may assume the role. Defaults to the environment variable. Protection rules on that GitHub environment are the deploy gate | `string` | `null` | no |
+| github\_immutable\_ids | Numeric owner and repository IDs, for repositories that use GitHub's immutable OIDC subject claims. The trust policy then matches repo:<owner>@<owner\_id>/<name>@<repository\_id>, which a recreated or renamed repository cannot reuse | ```object({ owner_id = number repository_id = number })``` | `null` | no |
 | max\_session\_duration | Seconds a session of the role lasts (3600 to 43200) | `number` | `3600` | no |
 | name\_suffix | Last part of the role name | `string` | `"deploy"` | no |
 | oidc\_provider\_arn | ARN of the GitHub OIDC identity provider of the account, arn:aws:iam::<account>:oidc-provider/token.actions.githubusercontent.com. Required unless create\_oidc\_provider is true | `string` | `null` | no |
