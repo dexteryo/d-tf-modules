@@ -123,6 +123,93 @@ run "deploy_permissions_name_the_services_and_repositories" {
   }
 }
 
+run "static_site_permissions_name_the_buckets_keys_and_distributions" {
+  command = apply
+
+  variables {
+    static_site_bucket_arns      = ["arn:aws:s3:::ordering-integration-web"]
+    static_site_kms_key_arns     = ["arn:aws:kms:eu-west-1:123456789012:key/11111111-2222-3333-4444-555555555555"]
+    cloudfront_distribution_arns = ["arn:aws:cloudfront::123456789012:distribution/E2EXAMPLE"]
+  }
+
+  assert {
+    condition     = [for s in jsondecode(aws_iam_role_policy.deploy.policy).Statement : s.Resource if s.Sid == "ListStaticSiteBuckets"][0] == ["arn:aws:s3:::ordering-integration-web"] && [for s in jsondecode(aws_iam_role_policy.deploy.policy).Statement : s.Action if s.Sid == "ListStaticSiteBuckets"][0] == ["s3:ListBucket"]
+    error_message = "Listing must be limited to the listed buckets."
+  }
+
+  assert {
+    condition     = [for s in jsondecode(aws_iam_role_policy.deploy.policy).Statement : s.Resource if s.Sid == "WriteStaticSiteObjects"][0] == ["arn:aws:s3:::ordering-integration-web/*"]
+    error_message = "Object writes must be limited to the objects of the listed buckets."
+  }
+
+  assert {
+    condition     = toset([for s in jsondecode(aws_iam_role_policy.deploy.policy).Statement : s.Action if s.Sid == "WriteStaticSiteObjects"][0]) == toset(["s3:DeleteObject", "s3:PutObject"])
+    error_message = "A sync needs only to upload and delete objects."
+  }
+
+  assert {
+    condition     = [for s in jsondecode(aws_iam_role_policy.deploy.policy).Statement : s.Resource if s.Sid == "EncryptStaticSiteObjects"][0] == ["arn:aws:kms:eu-west-1:123456789012:key/11111111-2222-3333-4444-555555555555"] && toset([for s in jsondecode(aws_iam_role_policy.deploy.policy).Statement : s.Action if s.Sid == "EncryptStaticSiteObjects"][0]) == toset(["kms:Decrypt", "kms:GenerateDataKey"])
+    error_message = "Encryption must be limited to the listed keys and the two upload actions."
+  }
+
+  assert {
+    condition     = [for s in jsondecode(aws_iam_role_policy.deploy.policy).Statement : s.Resource if s.Sid == "InvalidateDistributions"][0] == ["arn:aws:cloudfront::123456789012:distribution/E2EXAMPLE"] && toset([for s in jsondecode(aws_iam_role_policy.deploy.policy).Statement : s.Action if s.Sid == "InvalidateDistributions"][0]) == toset(["cloudfront:CreateInvalidation", "cloudfront:GetInvalidation"])
+    error_message = "Invalidations must be limited to the listed distributions."
+  }
+}
+
+run "wildcard_static_site_resources_are_refused" {
+  command = plan
+
+  variables {
+    static_site_bucket_arns      = ["arn:aws:s3:::*"]
+    static_site_kms_key_arns     = ["arn:aws:kms:eu-west-1:123456789012:key/*"]
+    cloudfront_distribution_arns = ["arn:aws:cloudfront::123456789012:distribution/*"]
+  }
+
+  expect_failures = [var.static_site_bucket_arns, var.static_site_kms_key_arns, var.cloudfront_distribution_arns]
+}
+
+run "kms_alias_arn_is_refused" {
+  command = plan
+
+  variables {
+    static_site_kms_key_arns = ["arn:aws:kms:eu-west-1:123456789012:alias/ordering-data"]
+  }
+
+  expect_failures = [var.static_site_kms_key_arns]
+}
+
+run "empty_kms_key_arn_is_refused" {
+  command = plan
+
+  variables {
+    static_site_kms_key_arns = [""]
+  }
+
+  expect_failures = [var.static_site_kms_key_arns]
+}
+
+run "bare_distribution_id_is_refused" {
+  command = plan
+
+  variables {
+    cloudfront_distribution_arns = ["E2EXAMPLE"]
+  }
+
+  expect_failures = [var.cloudfront_distribution_arns]
+}
+
+run "empty_distribution_arn_is_refused" {
+  command = plan
+
+  variables {
+    cloudfront_distribution_arns = [""]
+  }
+
+  expect_failures = [var.cloudfront_distribution_arns]
+}
+
 run "statements_are_left_out_when_their_lists_are_empty" {
   command = apply
 

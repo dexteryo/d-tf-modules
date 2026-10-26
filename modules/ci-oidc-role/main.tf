@@ -48,6 +48,32 @@ locals {
       Resource  = var.pass_role_arns
       Condition = { StringEquals = { "iam:PassedToService" = "ecs-tasks.amazonaws.com" } }
     }],
+    length(var.static_site_bucket_arns) == 0 ? [] : [
+      {
+        Sid      = "ListStaticSiteBuckets"
+        Effect   = "Allow"
+        Action   = ["s3:ListBucket"]
+        Resource = var.static_site_bucket_arns
+      },
+      {
+        Sid      = "WriteStaticSiteObjects"
+        Effect   = "Allow"
+        Action   = ["s3:DeleteObject", "s3:PutObject"]
+        Resource = [for arn in var.static_site_bucket_arns : "${arn}/*"]
+      },
+    ],
+    length(var.static_site_kms_key_arns) == 0 ? [] : [{
+      Sid      = "EncryptStaticSiteObjects"
+      Effect   = "Allow"
+      Action   = ["kms:Decrypt", "kms:GenerateDataKey"]
+      Resource = var.static_site_kms_key_arns
+    }],
+    length(var.cloudfront_distribution_arns) == 0 ? [] : [{
+      Sid      = "InvalidateDistributions"
+      Effect   = "Allow"
+      Action   = ["cloudfront:CreateInvalidation", "cloudfront:GetInvalidation"]
+      Resource = var.cloudfront_distribution_arns
+    }],
   )
 }
 
