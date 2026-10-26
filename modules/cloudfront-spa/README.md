@@ -37,7 +37,7 @@ The module declares no `configuration_aliases`; pass `providers = { aws = aws.us
 
 ```hcl
 module "web" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/cloudfront-spa?ref=v0.5.0"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/cloudfront-spa?ref=v0.5.1"
 
   providers = { aws = aws.us_east_1 }
 
