@@ -36,6 +36,10 @@ module "deploy_role" {
     "arn:aws:iam::123456789012:role/ordering-integration-execution",
     "arn:aws:iam::123456789012:role/ordering-integration-task",
   ]
+
+  static_site_bucket_arns      = ["arn:aws:s3:::ordering-integration-web"]
+  static_site_kms_key_arns     = ["arn:aws:kms:eu-west-1:123456789012:key/11111111-2222-3333-4444-555555555555"]
+  cloudfront_distribution_arns = ["arn:aws:cloudfront::123456789012:distribution/E2EXAMPLE"]
 }
 
 output "role_arn" {

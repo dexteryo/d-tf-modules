@@ -71,6 +71,39 @@ variable "pass_role_arns" {
   default     = []
 }
 
+variable "static_site_bucket_arns" {
+  description = "S3 buckets the role may sync a static site build into: list the bucket, upload and delete objects"
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition     = alltrue([for arn in var.static_site_bucket_arns : can(regex("^arn:aws[a-z-]*:s3:::[a-z0-9.-]+$", arn))])
+    error_message = "static_site_bucket_arns must be bucket ARNs without wildcards or object paths."
+  }
+}
+
+variable "static_site_kms_key_arns" {
+  description = "KMS keys encrypting those buckets; the role may generate data keys and decrypt with them, which SSE-KMS uploads need"
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition     = alltrue([for arn in var.static_site_kms_key_arns : !strcontains(arn, "*")])
+    error_message = "static_site_kms_key_arns must not contain wildcards."
+  }
+}
+
+variable "cloudfront_distribution_arns" {
+  description = "CloudFront distributions the role may invalidate after a sync"
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition     = alltrue([for arn in var.cloudfront_distribution_arns : !strcontains(arn, "*")])
+    error_message = "cloudfront_distribution_arns must not contain wildcards."
+  }
+}
+
 variable "max_session_duration" {
   description = "Seconds a session of the role lasts (3600 to 43200)"
   type        = number
