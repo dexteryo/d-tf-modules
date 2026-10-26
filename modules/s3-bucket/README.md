@@ -18,7 +18,7 @@ One private S3 bucket: KMS-encrypted, versioned, Block Public Access on, ACLs di
 
 ```hcl
 module "documents" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/s3-bucket?ref=v0.4.0"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/s3-bucket?ref=v0.5.0"
 
   name                       = "ordering"
   environment                = "production"
