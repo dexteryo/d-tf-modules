@@ -61,6 +61,34 @@ run "github_environment_can_differ_from_the_environment_name" {
   }
 }
 
+run "immutable_ids_put_the_numeric_ids_in_the_subject" {
+  command = apply
+
+  variables {
+    github_immutable_ids = { owner_id = 88313963, repository_id = 1425217396 }
+  }
+
+  assert {
+    condition     = output.trust_subject == "repo:example-org@88313963/example-infra@1425217396:environment:integration"
+    error_message = "The subject must carry the owner and repository IDs."
+  }
+
+  assert {
+    condition     = jsondecode(aws_iam_role.this.assume_role_policy).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:sub"] == "repo:example-org@88313963/example-infra@1425217396:environment:integration"
+    error_message = "The trust policy must match the immutable subject exactly."
+  }
+}
+
+run "immutable_ids_must_be_positive_whole_numbers" {
+  command = plan
+
+  variables {
+    github_immutable_ids = { owner_id = 0, repository_id = 1.5 }
+  }
+
+  expect_failures = [var.github_immutable_ids]
+}
+
 run "role_is_named_from_the_inputs" {
   command = apply
 
