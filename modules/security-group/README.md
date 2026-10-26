@@ -16,7 +16,7 @@ One security group whose rules are inputs. Nothing is open until a rule says so.
 
 ```hcl
 module "task_security_group" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/security-group?ref=v0.4.0"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/security-group?ref=v0.5.0"
 
   name        = "ordering"
   environment = "integration"

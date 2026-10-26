@@ -18,7 +18,7 @@ One encrypted SNS topic for alarms, a policy that lets CloudWatch publish, and e
 
 ```hcl
 module "alarm_topic" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/sns-topic?ref=v0.4.0"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/sns-topic?ref=v0.5.0"
 
   name            = "ordering"
   environment     = "integration"
