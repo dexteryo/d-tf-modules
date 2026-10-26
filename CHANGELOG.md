@@ -6,7 +6,7 @@ All notable changes to this repository are documented here. The format follows [
 
 ### Added
 
-- `modules/ci-oidc-role`: optional `static_site_bucket_arns`, `static_site_kms_key_arns` and `cloudfront_distribution_arns`, so the same role can sync a static site build into S3 (SSE-KMS) and invalidate its CloudFront distribution. Each statement is left out while its list is empty, and wildcards are refused.
+- `modules/ci-oidc-role`: optional `static_site_bucket_arns`, `static_site_kms_key_arns` and `cloudfront_distribution_arns`, so the same role can sync a static site build into S3 (SSE-KMS) and invalidate its CloudFront distribution. Each statement is left out while its list is empty. All three lists must hold well-formed ARNs without wildcards; KMS aliases and bare distribution IDs are refused.
 
 ## [0.4.0] - 2026-10-24
 

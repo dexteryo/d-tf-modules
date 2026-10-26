@@ -60,7 +60,7 @@ The reference module creates a family of roles per account type (branch and prot
 
 ## Tests
 
-`terraform test` with `mock_provider "aws"` covers the trust scoping (repository, environment, audience, no pattern match), the GitHub environment override, naming, the wildcard allow-list, service and repository scoping, the `PassRole` condition, static site bucket, key and distribution scoping, omitted statements, creating the provider and the input validations, including wildcard bucket, key and distribution ARNs.
+`terraform test` with `mock_provider "aws"` covers the trust scoping (repository, environment, audience, no pattern match), the GitHub environment override, naming, the wildcard allow-list, service and repository scoping, the `PassRole` condition, static site bucket, key and distribution scoping, omitted statements, creating the provider and the input validations, including wildcard bucket, key and distribution ARNs, KMS alias ARNs and bare distribution IDs.
 
 ## Example
 

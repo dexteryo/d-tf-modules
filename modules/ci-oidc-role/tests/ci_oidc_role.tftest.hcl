@@ -170,6 +170,46 @@ run "wildcard_static_site_resources_are_refused" {
   expect_failures = [var.static_site_bucket_arns, var.static_site_kms_key_arns, var.cloudfront_distribution_arns]
 }
 
+run "kms_alias_arn_is_refused" {
+  command = plan
+
+  variables {
+    static_site_kms_key_arns = ["arn:aws:kms:eu-west-1:123456789012:alias/ordering-data"]
+  }
+
+  expect_failures = [var.static_site_kms_key_arns]
+}
+
+run "empty_kms_key_arn_is_refused" {
+  command = plan
+
+  variables {
+    static_site_kms_key_arns = [""]
+  }
+
+  expect_failures = [var.static_site_kms_key_arns]
+}
+
+run "bare_distribution_id_is_refused" {
+  command = plan
+
+  variables {
+    cloudfront_distribution_arns = ["E2EXAMPLE"]
+  }
+
+  expect_failures = [var.cloudfront_distribution_arns]
+}
+
+run "empty_distribution_arn_is_refused" {
+  command = plan
+
+  variables {
+    cloudfront_distribution_arns = [""]
+  }
+
+  expect_failures = [var.cloudfront_distribution_arns]
+}
+
 run "statements_are_left_out_when_their_lists_are_empty" {
   command = apply
 

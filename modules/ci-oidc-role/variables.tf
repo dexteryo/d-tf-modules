@@ -88,8 +88,8 @@ variable "static_site_kms_key_arns" {
   default     = []
 
   validation {
-    condition     = alltrue([for arn in var.static_site_kms_key_arns : !strcontains(arn, "*")])
-    error_message = "static_site_kms_key_arns must not contain wildcards."
+    condition     = alltrue([for arn in var.static_site_kms_key_arns : can(regex("^arn:aws[a-z-]*:kms:[a-z0-9-]+:[0-9]{12}:key/[a-zA-Z0-9-]+$", arn))])
+    error_message = "static_site_kms_key_arns must be KMS key ARNs, not aliases, without wildcards."
   }
 }
 
@@ -99,8 +99,8 @@ variable "cloudfront_distribution_arns" {
   default     = []
 
   validation {
-    condition     = alltrue([for arn in var.cloudfront_distribution_arns : !strcontains(arn, "*")])
-    error_message = "cloudfront_distribution_arns must not contain wildcards."
+    condition     = alltrue([for arn in var.cloudfront_distribution_arns : can(regex("^arn:aws[a-z-]*:cloudfront::[0-9]{12}:distribution/[A-Z0-9]+$", arn))])
+    error_message = "cloudfront_distribution_arns must be CloudFront distribution ARNs, not bare IDs, without wildcards."
   }
 }
 
