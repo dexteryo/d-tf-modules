@@ -4,10 +4,10 @@ One Lambda function with its execution role, an encrypted log group and, when yo
 
 ## Owns
 
-- `aws_lambda_function` named `<name>-<environment>[-<name_suffix>]`: arm64 by default, JSON logs, environment variables encrypted with `kms_key_arn`.
+- `aws_lambda_function` named `<name>-<environment>[-<name_suffix>]`: arm64 by default, JSON logs, environment variables encrypted with `kms_key_arn` (required only when you pass `environment_variables`).
 - A log group `/aws/lambda/<function name>`, encrypted with `logs_kms_key_arn` and kept for a year by default.
-- An execution role named `<function name>-lambda`, holding only log writing on its own log group, `kms:Decrypt` on `kms_key_arn`, the `policy_statements` you pass, and in a VPC the managed network interface policy.
-- A placeholder zip for the first apply (Node.js, answers 503), named after the handler's file so the handler resolves. `filename` replaces it. Terraform ignores `filename` and `source_code_hash` afterwards, so a deploy never shows as drift.
+- An execution role named `<function name>-lambda`, holding only log writing on its own log group, `kms:Decrypt` on `kms_key_arn` (only when there are environment variables), the `policy_statements` you pass, and in a VPC the managed network interface policy.
+- A placeholder zip for the first apply (Node.js, answers 503), named after the handler's file so the handler resolves. Terraform ignores the code after creation, so a deploy workflow owns it and a deploy never shows as drift. There is no input for your own zip: a change to it would be ignored, so ship code through the deploy workflow.
 
 ## Does not own
 
@@ -90,17 +90,16 @@ No modules.
 | ---- | ----------- | ---- | ------- | :------: |
 | environment | Deployment environment (for example integration, staging, production) | `string` | n/a | yes |
 | handler | Handler, <file>.<export>, for example index.handler | `string` | n/a | yes |
-| kms\_key\_arn | Customer-managed key that encrypts the environment variables. The role gets kms:Decrypt on it | `string` | n/a | yes |
 | logs\_kms\_key\_arn | Customer-managed key that encrypts the log group. Its key policy must let the CloudWatch Logs service use it | `string` | n/a | yes |
 | name | Workload name. The function is named <name>-<environment>[-<name\_suffix>] and its role adds -lambda | `string` | n/a | yes |
 | runtime | Lambda runtime, for example nodejs22.x | `string` | n/a | yes |
 | architectures | Instruction set of the function | `list(string)` | ```[ "arm64" ]``` | no |
 | environment\_variables | Environment variables. Never put a secret value here; pass the ARN of a secret and read it at run time | `map(string)` | `{}` | no |
-| filename | Zip with the code for the first apply. Null uses a placeholder that answers 503 until the deploy workflow ships the real code; the code is ignored after creation | `string` | `null` | no |
+| kms\_key\_arn | Customer-managed key that encrypts the environment variables. Required when environment\_variables is not empty; the role then gets kms:Decrypt on it. Unused, and not set on the function, while there are no environment variables | `string` | `null` | no |
 | log\_retention\_days | Days the function's logs are kept | `number` | `365` | no |
 | memory\_size | Memory in MB | `number` | `256` | no |
 | name\_suffix | Optional last part of the name, for example webhook-intake | `string` | `null` | no |
-| policy\_statements | Extra permissions for the function's role, one object per statement. Name resources exactly; the module adds only log writing, kms:Decrypt on kms\_key\_arn and, in a VPC, the network interface actions | ```list(object({ sid = string actions = list(string) resources = list(string) }))``` | `[]` | no |
+| policy\_statements | Extra permissions for the function's role, one object per statement. Name resources exactly; the module adds only log writing, kms:Decrypt on kms\_key\_arn when there are environment variables and, in a VPC, the network interface actions | ```list(object({ sid = string actions = list(string) resources = list(string) }))``` | `[]` | no |
 | security\_group\_ids | Security groups for the function when it runs in a VPC | `list(string)` | `[]` | no |
 | subnet\_ids | Subnets for the function. Empty runs it outside a VPC; set both subnet\_ids and security\_group\_ids to attach it | `list(string)` | `[]` | no |
 | tags | Tags for every resource, usually the all\_tags output of the tags module | `map(string)` | `{}` | no |

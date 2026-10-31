@@ -32,7 +32,6 @@ variables {
   tags             = { Environment = "integration" }
   runtime          = "nodejs22.x"
   handler          = "intake.handler"
-  kms_key_arn      = "arn:aws:kms:eu-west-1:123456789012:key/00000000-0000-0000-0000-000000000000"
   logs_kms_key_arn = "arn:aws:kms:eu-west-1:123456789012:key/11111111-1111-1111-1111-111111111111"
 }
 
@@ -45,8 +44,8 @@ run "the_function_is_named_encrypted_and_logs_json" {
   }
 
   assert {
-    condition     = aws_lambda_function.this.kms_key_arn == var.kms_key_arn && aws_cloudwatch_log_group.this.kms_key_id == var.logs_kms_key_arn
-    error_message = "Environment variables and logs must use the given keys."
+    condition     = aws_cloudwatch_log_group.this.kms_key_id == var.logs_kms_key_arn
+    error_message = "Logs must use the given key."
   }
 
   assert {
@@ -65,13 +64,60 @@ run "the_first_apply_ships_a_placeholder_named_after_the_handler" {
 
   assert {
     condition     = strcontains(data.archive_file.placeholder.output_path, "placeholder-ordering-integration-intake.zip")
-    error_message = "Without filename the module builds a placeholder zip."
+    error_message = "The module builds a placeholder zip for the first apply."
   }
 
   assert {
     condition     = one(data.archive_file.placeholder.source).filename == "intake.cjs"
     error_message = "The placeholder file is named after the handler's file so the handler resolves."
   }
+}
+
+run "without_environment_variables_no_key_is_set_and_nothing_is_decryptable" {
+  command = apply
+
+  variables {
+    kms_key_arn = "arn:aws:kms:eu-west-1:123456789012:key/00000000-0000-0000-0000-000000000000"
+  }
+
+  assert {
+    condition     = aws_lambda_function.this.kms_key_arn == null && length(aws_lambda_function.this.environment) == 0
+    error_message = "A function with no environment variables must not carry a key."
+  }
+
+  assert {
+    condition     = !contains([for statement in data.aws_iam_policy_document.this.statement : statement.sid], "DecryptEnvironment")
+    error_message = "A function with no environment variables gets no kms:Decrypt."
+  }
+}
+
+run "environment_variables_are_encrypted_and_decryptable_with_the_given_key" {
+  command = apply
+
+  variables {
+    kms_key_arn           = "arn:aws:kms:eu-west-1:123456789012:key/00000000-0000-0000-0000-000000000000"
+    environment_variables = { QUEUE_URL = "https://sqs.eu-west-1.amazonaws.com/123456789012/ordering-integration-jobs" }
+  }
+
+  assert {
+    condition     = aws_lambda_function.this.kms_key_arn == var.kms_key_arn
+    error_message = "Environment variables must use the given key."
+  }
+
+  assert {
+    condition     = contains([for statement in data.aws_iam_policy_document.this.statement : statement.sid], "DecryptEnvironment")
+    error_message = "The role needs kms:Decrypt on the key."
+  }
+}
+
+run "environment_variables_without_a_key_are_refused" {
+  command = plan
+
+  variables {
+    environment_variables = { QUEUE_URL = "https://sqs.eu-west-1.amazonaws.com/123456789012/ordering-integration-jobs" }
+  }
+
+  expect_failures = [aws_lambda_function.this]
 }
 
 run "outside_a_vpc_by_default" {
@@ -119,8 +165,8 @@ run "the_role_gets_only_logs_kms_and_the_given_statements" {
   }
 
   assert {
-    condition     = toset([for statement in data.aws_iam_policy_document.this.statement : statement.sid]) == toset(["WriteOwnLogs", "DecryptEnvironment", "SendToQueue"])
-    error_message = "The role holds log writing, kms:Decrypt on the environment key and the statements passed in, nothing else."
+    condition     = toset([for statement in data.aws_iam_policy_document.this.statement : statement.sid]) == toset(["WriteOwnLogs", "SendToQueue"])
+    error_message = "Without environment variables the role holds log writing and the statements passed in, nothing else."
   }
 
   assert {
@@ -133,6 +179,7 @@ run "environment_variables_are_passed_through" {
   command = apply
 
   variables {
+    kms_key_arn           = "arn:aws:kms:eu-west-1:123456789012:key/00000000-0000-0000-0000-000000000000"
     environment_variables = { QUEUE_URL = "https://sqs.eu-west-1.amazonaws.com/123456789012/ordering-integration-jobs" }
   }
 

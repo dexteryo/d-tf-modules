@@ -25,16 +25,6 @@ module "tags" {
   repository  = "example-org/example-infra"
 }
 
-module "data_key" {
-  source = "../../../kms"
-
-  name        = "ordering"
-  environment = "integration"
-  name_suffix = "data"
-  description = "Encrypts the function's environment variables"
-  tags        = module.tags.all_tags
-}
-
 module "logs_key" {
   source = "../../../kms"
 
@@ -67,7 +57,6 @@ module "intake" {
   tags             = module.tags.all_tags
   runtime          = "nodejs22.x"
   handler          = "intake.handler"
-  kms_key_arn      = module.data_key.kms_key_arn
   logs_kms_key_arn = module.logs_key.kms_key_arn
 }
 

@@ -1,9 +1,8 @@
 locals {
-  full_name   = join("-", compact([var.name, var.environment, var.name_suffix]))
-  in_vpc      = length(var.subnet_ids) > 0
-  handler_dir = split(".", var.handler)[0]
-  zip_path    = var.filename == null ? data.archive_file.placeholder.output_path : var.filename
-  zip_hash    = var.filename == null ? data.archive_file.placeholder.output_base64sha256 : filebase64sha256(var.filename)
+  full_name       = join("-", compact([var.name, var.environment, var.name_suffix]))
+  in_vpc          = length(var.subnet_ids) > 0
+  handler_dir     = split(".", var.handler)[0]
+  has_environment = length(var.environment_variables) > 0
 }
 
 data "archive_file" "placeholder" {
@@ -41,10 +40,14 @@ data "aws_iam_policy_document" "this" {
     resources = ["${aws_cloudwatch_log_group.this.arn}:*"]
   }
 
-  statement {
-    sid       = "DecryptEnvironment"
-    actions   = ["kms:Decrypt"]
-    resources = [var.kms_key_arn]
+  dynamic "statement" {
+    for_each = local.has_environment && var.kms_key_arn != null ? [var.kms_key_arn] : []
+
+    content {
+      sid       = "DecryptEnvironment"
+      actions   = ["kms:Decrypt"]
+      resources = [statement.value]
+    }
   }
 
   dynamic "statement" {
@@ -85,11 +88,11 @@ resource "aws_lambda_function" "this" {
   architectures = var.architectures
   timeout       = var.timeout
   memory_size   = var.memory_size
-  kms_key_arn   = var.kms_key_arn
+  kms_key_arn   = local.has_environment ? var.kms_key_arn : null
   tags          = merge(var.tags, { Name = local.full_name })
 
-  filename         = local.zip_path
-  source_code_hash = local.zip_hash
+  filename         = data.archive_file.placeholder.output_path
+  source_code_hash = data.archive_file.placeholder.output_base64sha256
 
   dynamic "vpc_config" {
     for_each = local.in_vpc ? [1] : []
@@ -101,7 +104,7 @@ resource "aws_lambda_function" "this" {
   }
 
   dynamic "environment" {
-    for_each = length(var.environment_variables) > 0 ? [1] : []
+    for_each = local.has_environment ? [1] : []
 
     content {
       variables = var.environment_variables
@@ -115,6 +118,11 @@ resource "aws_lambda_function" "this" {
 
   lifecycle {
     ignore_changes = [filename, source_code_hash]
+
+    precondition {
+      condition     = !local.has_environment || var.kms_key_arn != null
+      error_message = "kms_key_arn is required when environment_variables is not empty, so environment values are never stored under the default key."
+    }
   }
 
   depends_on = [aws_iam_role_policy.this, aws_iam_role_policy_attachment.vpc_access]

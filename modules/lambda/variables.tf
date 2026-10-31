@@ -54,8 +54,9 @@ variable "memory_size" {
 }
 
 variable "kms_key_arn" {
-  description = "Customer-managed key that encrypts the environment variables. The role gets kms:Decrypt on it"
+  description = "Customer-managed key that encrypts the environment variables. Required when environment_variables is not empty; the role then gets kms:Decrypt on it. Unused, and not set on the function, while there are no environment variables"
   type        = string
+  default     = null
 }
 
 variable "logs_kms_key_arn" {
@@ -93,17 +94,11 @@ variable "environment_variables" {
 }
 
 variable "policy_statements" {
-  description = "Extra permissions for the function's role, one object per statement. Name resources exactly; the module adds only log writing, kms:Decrypt on kms_key_arn and, in a VPC, the network interface actions"
+  description = "Extra permissions for the function's role, one object per statement. Name resources exactly; the module adds only log writing, kms:Decrypt on kms_key_arn when there are environment variables and, in a VPC, the network interface actions"
   type = list(object({
     sid       = string
     actions   = list(string)
     resources = list(string)
   }))
   default = []
-}
-
-variable "filename" {
-  description = "Zip with the code for the first apply. Null uses a placeholder that answers 503 until the deploy workflow ships the real code; the code is ignored after creation"
-  type        = string
-  default     = null
 }
