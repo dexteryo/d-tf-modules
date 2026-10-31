@@ -2,6 +2,14 @@
 
 All notable changes to this repository are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `modules/sqs-queue`: encrypted queue with a dead-letter queue, redrive after `max_receive_count` receives, a redrive allow policy, TLS-only queue policies and an alarm on the dead-letter queue.
+- `modules/lambda`: one function with an execution role, an encrypted log group, optional VPC access, `policy_statements` for extra permissions and a placeholder zip. Terraform ignores `filename` and `source_code_hash` after creation so a deploy workflow owns the code. Adds the `hashicorp/archive` provider (`~> 2.0`) for the placeholder.
+- `modules/apigw-http-lambda`: HTTP API with a fixed list of exact routes to one function, one invoke permission per route, throttling on the stage and every route, and encrypted access logs without request bodies or headers.
+
 ## [0.5.1] - 2026-10-26
 
 ### Added
