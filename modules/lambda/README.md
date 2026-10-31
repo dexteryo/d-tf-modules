@@ -64,8 +64,8 @@ module "intake" {
 
 | Name | Version |
 | ---- | ------- |
-| archive | 2.8.1 |
-| aws | 6.71.0 |
+| archive | ~> 2.0 |
+| aws | ~> 6.0 |
 
 ## Modules
 

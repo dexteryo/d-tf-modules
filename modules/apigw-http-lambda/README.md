@@ -54,7 +54,7 @@ Routes are exact. Wildcards and path parameters such as `{partner}` are refused,
 
 | Name | Version |
 | ---- | ------- |
-| aws | 6.71.0 |
+| aws | ~> 6.0 |
 
 ## Modules
 

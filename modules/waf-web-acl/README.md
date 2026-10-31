@@ -75,7 +75,7 @@ Per-rule overrides and excluded rules, rule labels, custom response bodies, scop
 
 | Name | Version |
 | ---- | ------- |
-| aws | 6.70.0 |
+| aws | ~> 6.0 |
 
 ## Modules
 

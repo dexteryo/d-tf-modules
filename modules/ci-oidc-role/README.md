@@ -80,7 +80,7 @@ The reference module creates a family of roles per account type (branch and prot
 
 | Name | Version |
 | ---- | ------- |
-| aws | 6.70.0 |
+| aws | ~> 6.0 |
 
 ## Modules
 

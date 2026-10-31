@@ -116,7 +116,7 @@ The reference service modules also cover EC2 launch type, scheduled and ad-hoc t
 
 | Name | Version |
 | ---- | ------- |
-| aws | 6.70.0 |
+| aws | ~> 6.0 |
 
 ## Modules
 

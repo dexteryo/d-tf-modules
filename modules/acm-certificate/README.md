@@ -85,7 +85,7 @@ Certificate transparency opt-out, email validation, private CAs, importing certi
 
 | Name | Version |
 | ---- | ------- |
-| aws | 6.70.0 |
+| aws | ~> 6.0 |
 
 ## Modules
 

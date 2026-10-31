@@ -31,6 +31,7 @@ step "trivy config"
 trivy config --ignorefile .trivyignore --severity HIGH,CRITICAL --exit-code 1 --skip-dirs '**/.terraform' .
 
 step "terraform-docs"
+find modules -name .terraform.lock.hcl -not -path '*/.terraform/*' -delete
 for dir in modules/*; do
   terraform-docs --config .terraform-docs.yml --output-check "$dir"
 done

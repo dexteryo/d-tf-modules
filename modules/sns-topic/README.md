@@ -52,7 +52,7 @@ The reference module creates email subscriptions through a CloudFormation stack,
 
 | Name | Version |
 | ---- | ------- |
-| aws | 6.70.0 |
+| aws | ~> 6.0 |
 
 ## Modules
 

@@ -113,7 +113,7 @@ Custom error responses, cache policies other than the managed ones, origin group
 
 | Name | Version |
 | ---- | ------- |
-| aws | 6.70.0 |
+| aws | ~> 6.0 |
 
 ## Modules
 

@@ -63,7 +63,7 @@ Server access logging, replication, event notifications and CORS. Each depends o
 
 | Name | Version |
 | ---- | ------- |
-| aws | 6.70.0 |
+| aws | ~> 6.0 |
 
 ## Modules
 

@@ -79,8 +79,8 @@ The instance is named `ordering-production-postgres`, and the role secret `order
 
 | Name | Version |
 | ---- | ------- |
-| aws | 6.70.0 |
-| random | 3.9.1 |
+| aws | ~> 6.0 |
+| random | ~> 3.6 |
 
 ## Modules
 

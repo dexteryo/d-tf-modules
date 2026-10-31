@@ -53,7 +53,7 @@ Set `visibility_timeout_seconds` above the consumer's timeout, or a slow message
 
 | Name | Version |
 | ---- | ------- |
-| aws | 6.71.0 |
+| aws | ~> 6.0 |
 
 ## Modules
 
