@@ -19,7 +19,7 @@ One external application load balancer with its security group, HTTPS listeners 
 
 ```hcl
 module "alb" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/alb?ref=v0.5.1"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/alb?ref=v0.6.0"
 
   name         = "ordering"
   environment  = "integration"

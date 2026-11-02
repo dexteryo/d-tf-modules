@@ -4,6 +4,12 @@ All notable changes to this repository are documented here. The format follows [
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-02
+
+### Changed
+
+- `scripts/check.sh` deletes the untracked `.terraform.lock.hcl` files before the terraform-docs step, so the Providers table shows the version constraint (`~> 6.0`) and a new provider release no longer makes every README out of date.
+
 ### Added
 
 - `modules/sqs-queue`: encrypted queue with a dead-letter queue, redrive after `max_receive_count` receives, a redrive allow policy, TLS-only queue policies and an alarm on the dead-letter queue.
