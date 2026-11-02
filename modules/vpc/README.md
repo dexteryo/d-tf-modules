@@ -77,7 +77,7 @@ IPv6, a transit gateway or peering, network ACLs beyond the VPC defaults, and a 
 
 | Name | Version |
 | ---- | ------- |
-| aws | 6.70.0 |
+| aws | ~> 6.0 |
 
 ## Modules
 

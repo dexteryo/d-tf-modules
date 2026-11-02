@@ -1,6 +1,6 @@
 # d-tf-modules
 
-Small, single-purpose Terraform modules for running services on ECS Fargate. Each module owns one thing, takes tags from one place and is built to be composed.
+Small, single-purpose Terraform modules for running services on ECS Fargate and on Lambda. Each module owns one thing, takes tags from one place and is built to be composed.
 
 | Module | Owns |
 | --- | --- |
@@ -20,9 +20,12 @@ Small, single-purpose Terraform modules for running services on ECS Fargate. Eac
 | [`modules/ecs-service-alarms`](modules/ecs-service-alarms) | CloudWatch alarms for the service and the load balancer in front of it |
 | [`modules/sns-topic`](modules/sns-topic) | Encrypted alarm topic with a CloudWatch publish policy and subscriptions |
 | [`modules/ci-oidc-role`](modules/ci-oidc-role) | GitHub OIDC deploy role, trusted for one repository and one environment |
+| [`modules/sqs-queue`](modules/sqs-queue) | Encrypted queue with a dead-letter queue, TLS-only policies and an alarm on the dead-letter queue |
+| [`modules/lambda`](modules/lambda) | One function with its role, encrypted logs, optional VPC access, and a placeholder zip so a deploy workflow owns the code |
+| [`modules/apigw-http-lambda`](modules/apigw-http-lambda) | HTTP API that sends a fixed list of routes to one function, with per-route invoke permissions, throttling and encrypted access logs |
 | [`examples/ordering-agent`](examples/ordering-agent) | All of the above composed for a two-container service |
 
-Not built yet: `lambda`. The reference lambda module bundles several packaging modes, tracing agents, container and placeholder images, aliases and secret wiring; it is not small. It is the next module once a workload needs it (see [CHANGELOG.md](CHANGELOG.md)).
+The `lambda` module is deliberately small: one function, its role and logs, with optional VPC access. Packaging modes, tracing agents, container images, aliases and secret wiring stay out; pass what you need through `policy_statements` and `environment_variables`.
 
 The companion repository `d-github-actions` builds images, scans them, pushes them to ECR by digest and deploys new task definition revisions to a service created by these modules, promoting the same digest from one environment to the next.
 
@@ -43,6 +46,10 @@ security-group ──► ecs-service   (security_group_ids)
 alb ──► ecs-service              (listener_arns[...] -> load_balancer.listener_arn)
 ecs-cluster ──► ecs-service, ecs-service-alarms
 ecs-service ──► ecs-service-alarms, ci-oidc-role
+kms ──► sqs-queue (kms_key_arn), lambda (kms_key_arn, logs_kms_key_arn), apigw-http-lambda (logs_kms_key_arn)
+sqs-queue ──► lambda   (policy_statements name queue_arn; environment_variables carry queue_url)
+lambda ──► apigw-http-lambda (function_name, function_invoke_arn)
+sns-topic ──► sqs-queue (alarm_actions)
 sns-topic ──► ecs-service-alarms (alarm_actions)
 ```
 
