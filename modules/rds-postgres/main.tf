@@ -15,13 +15,15 @@ resource "aws_db_parameter_group" "this" {
   family      = "postgres${var.engine_version}"
 
   parameter {
-    name  = "rds.force_ssl"
-    value = "1"
+    name         = "rds.force_ssl"
+    value        = "1"
+    apply_method = "pending-reboot"
   }
 
   parameter {
-    name  = "ssl_min_protocol_version"
-    value = "TLSv1.2"
+    name         = "ssl_min_protocol_version"
+    value        = "TLSv1.2"
+    apply_method = "pending-reboot"
   }
 
   tags = merge(var.tags, { Name = local.identifier })
