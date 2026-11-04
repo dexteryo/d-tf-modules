@@ -71,6 +71,11 @@ run "instance_is_named_encrypted_private_and_tls_only" {
     condition     = alltrue([for p in aws_db_parameter_group.this.parameter : p.value == (p.name == "rds.force_ssl" ? "1" : "TLSv1.2")]) && aws_db_parameter_group.this.family == "postgres17"
     error_message = "TLS must be forced with TLS 1.2 as the minimum, on the family of the engine version."
   }
+
+  assert {
+    condition     = alltrue([for p in aws_db_parameter_group.this.parameter : p.apply_method == "pending-reboot"])
+    error_message = "The TLS parameters use the apply method RDS reports for them, so a plan after apply shows no change."
+  }
 }
 
 run "safe_defaults_for_backups_and_deletion" {
