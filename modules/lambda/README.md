@@ -21,7 +21,7 @@ One Lambda function with its execution role, an encrypted log group and, when yo
 
 ```hcl
 module "intake" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/lambda?ref=v0.6.0"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/lambda?ref=v0.6.1"
 
   name             = "ordering"
   environment      = "integration"
