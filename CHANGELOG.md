@@ -4,6 +4,8 @@ All notable changes to this repository are documented here. The format follows [
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-05
+
 ### Fixed
 
 - `modules/rds-postgres`: the `rds.force_ssl` and `ssl_min_protocol_version` parameters now set `apply_method = "pending-reboot"`, which is what RDS reports for them. With the provider default (`immediate`) every plan showed an in-place change to the parameter group, and anything that depended on the database module was re-read at apply time.
