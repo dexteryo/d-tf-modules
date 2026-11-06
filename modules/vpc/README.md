@@ -22,7 +22,7 @@ A three-tier VPC spread over 2 to 6 zones: public, private and isolated subnets,
 
 ```hcl
 module "vpc" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/vpc?ref=v0.6.1"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/vpc?ref=v0.6.2"
 
   name                        = "ordering"
   environment                 = "production"

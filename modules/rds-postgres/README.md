@@ -23,7 +23,7 @@ One RDS for PostgreSQL instance that is encrypted, private and TLS-only, with ge
 
 ```hcl
 module "database" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/rds-postgres?ref=v0.6.1"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/rds-postgres?ref=v0.6.2"
 
   name                  = "ordering"
   environment           = "production"
