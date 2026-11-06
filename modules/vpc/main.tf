@@ -7,6 +7,8 @@ locals {
   public_cidrs   = [for index in local.zone_ids : cidrsubnet(var.cidr_block, 8, index)]
   isolated_cidrs = [for index in local.zone_ids : cidrsubnet(var.cidr_block, 8, 10 + index)]
   private_cidrs  = [for index in local.zone_ids : cidrsubnet(var.cidr_block, 6, 4 + index)]
+
+  nat_gateway_count = var.single_nat_gateway ? 1 : length(var.availability_zones)
 }
 
 resource "aws_vpc" "this" {
@@ -67,7 +69,7 @@ resource "aws_subnet" "isolated" {
 }
 
 resource "aws_eip" "nat" {
-  count  = length(var.availability_zones)
+  count  = local.nat_gateway_count
   domain = "vpc"
 
   tags = merge(var.tags, { Name = "${local.full_name}-nat-${var.availability_zones[count.index]}" })
@@ -76,7 +78,7 @@ resource "aws_eip" "nat" {
 }
 
 resource "aws_nat_gateway" "this" {
-  count         = length(var.availability_zones)
+  count         = local.nat_gateway_count
   allocation_id = aws_eip.nat[count.index].id
   subnet_id     = aws_subnet.public[count.index].id
 
@@ -112,7 +114,7 @@ resource "aws_route" "private_nat" {
   count                  = length(var.availability_zones)
   route_table_id         = aws_route_table.private[count.index].id
   destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.this[count.index].id
+  nat_gateway_id         = aws_nat_gateway.this[var.single_nat_gateway ? 0 : count.index].id
 }
 
 resource "aws_route_table_association" "private" {
