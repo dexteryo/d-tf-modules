@@ -17,7 +17,7 @@ The one place where tags are decided. It validates the mandatory tags, merges th
 
 ```hcl
 module "tags" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/tags?ref=v0.6.1"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/tags?ref=v0.6.2"
 
   environment = "integration"
   service     = "ordering"

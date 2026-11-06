@@ -18,7 +18,7 @@ An IAM role that GitHub Actions assumes through OpenID Connect to build images a
 
 ```hcl
 module "deploy_role" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/ci-oidc-role?ref=v0.6.1"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/ci-oidc-role?ref=v0.6.2"
 
   name              = "ordering"
   environment       = "integration"

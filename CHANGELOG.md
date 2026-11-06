@@ -4,6 +4,8 @@ All notable changes to this repository are documented here. The format follows [
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-11-06
+
 ### Added
 
 - `modules/vpc`: optional `single_nat_gateway` (default `false`). When `true`, the module creates one NAT gateway and Elastic IP, in the first zone, and every private route table routes through it. For environments where cost or the account's Elastic IP quota matters more than zone isolation.
