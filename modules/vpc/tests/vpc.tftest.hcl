@@ -95,6 +95,29 @@ run "every_zone_has_its_own_nat_gateway_and_private_route" {
   }
 }
 
+run "single_nat_gateway_serves_every_private_route_table" {
+  command = apply
+
+  variables {
+    single_nat_gateway = true
+  }
+
+  assert {
+    condition     = length(aws_nat_gateway.this) == 1 && length(aws_eip.nat) == 1
+    error_message = "One NAT gateway and one address in all."
+  }
+
+  assert {
+    condition     = aws_nat_gateway.this[0].subnet_id == aws_subnet.public[0].id
+    error_message = "The NAT gateway sits in the public subnet of the first zone."
+  }
+
+  assert {
+    condition     = length(aws_route.private_nat) == 3 && alltrue([for route in aws_route.private_nat : route.nat_gateway_id == aws_nat_gateway.this[0].id])
+    error_message = "Every private route table keeps its own route, through the one NAT gateway."
+  }
+}
+
 run "default_security_group_admits_nothing" {
   command = apply
 

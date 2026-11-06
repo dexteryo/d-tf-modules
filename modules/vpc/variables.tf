@@ -33,7 +33,7 @@ variable "cidr_block" {
 }
 
 variable "availability_zones" {
-  description = "Zones to spread the subnets over, for example [\"eu-west-1a\", \"eu-west-1b\", \"eu-west-1c\"]. Each zone gets one public, one private and one isolated subnet and its own NAT gateway"
+  description = "Zones to spread the subnets over, for example [\"eu-west-1a\", \"eu-west-1b\", \"eu-west-1c\"]. Each zone gets one public, one private and one isolated subnet, and its own NAT gateway unless single_nat_gateway is set"
   type        = list(string)
 
   validation {
@@ -68,4 +68,10 @@ variable "interface_endpoint_services" {
   description = "Interface endpoints to create in the private subnets, by service name without the com.amazonaws.<region> prefix, for example [\"ecr.api\", \"ecr.dkr\", \"logs\", \"secretsmanager\"]"
   type        = set(string)
   default     = []
+}
+
+variable "single_nat_gateway" {
+  description = "Use one NAT gateway and Elastic IP, in the first zone, for every private subnet instead of one per zone. Cheaper, but losing that zone cuts outbound internet for all of them"
+  type        = bool
+  default     = false
 }

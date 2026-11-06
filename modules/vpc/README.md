@@ -1,11 +1,11 @@
 # vpc
 
-A three-tier VPC spread over 2 to 6 zones: public, private and isolated subnets, one NAT gateway and Elastic IP per zone, endpoints for AWS services, flow logs and a default security group that admits nothing.
+A three-tier VPC spread over 2 to 6 zones: public, private and isolated subnets, one NAT gateway and Elastic IP per zone (or one in all with `single_nat_gateway`), endpoints for AWS services, flow logs and a default security group that admits nothing.
 
 ## Owns
 
 - The VPC, internet gateway, and one public, one private and one isolated subnet per zone.
-- A NAT gateway and Elastic IP per zone. Each private subnet routes to the NAT gateway in its own zone, so losing a zone does not cut off the others.
+- A NAT gateway and Elastic IP per zone. Each private subnet routes to the NAT gateway in its own zone, so losing a zone does not cut off the others. With `single_nat_gateway = true` there is one NAT gateway and Elastic IP, in the first zone's public subnet, and every private route table points at it.
 - Route tables: one shared public table, one private table per zone, one shared isolated table with no route out.
 - Gateway endpoints (`s3` by default, `dynamodb` on request) on the private and isolated route tables.
 - Interface endpoints for the services in `interface_endpoint_services`, in the private subnets, behind one security group that admits HTTPS from the VPC.
@@ -48,18 +48,18 @@ Private subnets are larger because tasks and endpoints take their addresses. The
 
 ## Defaults worth knowing
 
-- A NAT gateway per zone is the expensive part of this module, and there is no option for a single shared one. Use fewer zones if cost matters more than zone isolation.
+- A NAT gateway per zone is the expensive part of this module. Set `single_nat_gateway = true` where cost matters more than zone isolation, such as a dev environment; losing the first zone then cuts outbound internet for every private subnet. It also uses one Elastic IP instead of one per zone, which helps when several stacks share an account's address quota.
 - Nothing gets a public IP on launch, even in the public subnets.
 - Flow logs are kept for 365 days.
 - Output `nat_eips` is what partners put on their allow-lists. The addresses stay as long as the NAT gateways do.
 
 ## Left out on purpose
 
-IPv6, a transit gateway or peering, network ACLs beyond the VPC defaults, and a single-NAT mode. Each can be added in the caller from the outputs.
+IPv6, a transit gateway or peering, and network ACLs beyond the VPC defaults. Each can be added in the caller from the outputs.
 
 ## Tests
 
-`terraform test` with `mock_provider "aws"` covers naming and tags, the fixed subnet CIDRs and zone order, a NAT gateway and private route per zone, the empty default security group, gateway and interface endpoints, flow logs, other zone counts and input validation.
+`terraform test` with `mock_provider "aws"` covers naming and tags, the fixed subnet CIDRs and zone order, a NAT gateway and private route per zone, the single shared NAT gateway, the empty default security group, gateway and interface endpoints, flow logs, other zone counts and input validation.
 
 ## Example
 
@@ -119,7 +119,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| availability\_zones | Zones to spread the subnets over, for example ["eu-west-1a", "eu-west-1b", "eu-west-1c"]. Each zone gets one public, one private and one isolated subnet and its own NAT gateway | `list(string)` | n/a | yes |
+| availability\_zones | Zones to spread the subnets over, for example ["eu-west-1a", "eu-west-1b", "eu-west-1c"]. Each zone gets one public, one private and one isolated subnet, and its own NAT gateway unless single\_nat\_gateway is set | `list(string)` | n/a | yes |
 | logs\_kms\_key\_arn | Key that encrypts the VPC flow log group | `string` | n/a | yes |
 | name | Workload name. Resources are named <name>-<environment>[-<name\_suffix>] | `string` | n/a | yes |
 | cidr\_block | CIDR of the VPC. It must be a /16 so the fixed subnet layout fits | `string` | `"10.0.0.0/16"` | no |
@@ -128,6 +128,7 @@ No modules.
 | gateway\_endpoint\_services | Gateway endpoints to create, attached to the private and isolated route tables. Allowed: s3, dynamodb | `set(string)` | ```[ "s3" ]``` | no |
 | interface\_endpoint\_services | Interface endpoints to create in the private subnets, by service name without the com.amazonaws.<region> prefix, for example ["ecr.api", "ecr.dkr", "logs", "secretsmanager"] | `set(string)` | `[]` | no |
 | name\_suffix | Optional last part of the name, for example edge when one workload has several networks | `string` | `""` | no |
+| single\_nat\_gateway | Use one NAT gateway and Elastic IP, in the first zone, for every private subnet instead of one per zone. Cheaper, but losing that zone cuts outbound internet for all of them | `bool` | `false` | no |
 | tags | Tags for every resource, usually the all\_tags output of the tags module | `map(string)` | `{}` | no |
 
 ## Outputs
