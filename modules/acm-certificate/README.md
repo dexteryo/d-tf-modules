@@ -32,7 +32,7 @@ The module declares no `configuration_aliases`; pass `providers = { aws = aws.us
 
 ```hcl
 module "edge_certificate" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/acm-certificate?ref=v0.7.0"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/acm-certificate?ref=v0.7.1"
 
   providers = { aws = aws.us_east_1 }
 

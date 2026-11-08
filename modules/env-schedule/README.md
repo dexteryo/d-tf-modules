@@ -20,7 +20,7 @@ Stops a non-production environment outside working hours and starts it again: EC
 
 ```hcl
 module "schedule" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/env-schedule?ref=v0.7.0"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/env-schedule?ref=v0.7.1"
 
   name          = "ordering"
   environment   = "integration"
