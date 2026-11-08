@@ -19,7 +19,7 @@ One regional HTTP API that sends a fixed list of routes to one Lambda function, 
 
 ```hcl
 module "webhooks" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/apigw-http-lambda?ref=v0.6.2"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/apigw-http-lambda?ref=v0.7.0"
 
   name                = "ordering"
   environment         = "integration"

@@ -4,6 +4,8 @@ All notable changes to this repository are documented here. The format follows [
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-08
+
 ### Added
 
 - `modules/env-schedule`: EventBridge Scheduler schedules that scale ECS services to zero and stop RDS instances on one cron, then start databases and services on two later crons, read in an IANA time zone. With no start cron the start schedules exist disabled, so the environment stays off until an operator starts it. The scheduler role may only start and stop the named instances and update the named services. An optional operator role lets one GitHub repository environment, through OIDC, read the group's schedules and act on the same targets.

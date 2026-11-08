@@ -20,7 +20,7 @@ One encrypted SQS queue with a dead-letter queue, a policy that refuses plain HT
 
 ```hcl
 module "jobs" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/sqs-queue?ref=v0.6.2"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/sqs-queue?ref=v0.7.0"
 
   name          = "ordering"
   environment   = "integration"
