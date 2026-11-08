@@ -7,7 +7,7 @@ locals {
   account_id = data.aws_caller_identity.current.account_id
   region     = data.aws_region.current.region
 
-  never = "cron(0 0 1 1 ? 2199)"
+  disabled_start_expression = "cron(0 0 1 1 ? *)"
 
   database_arns = [for identifier in values(var.db_instances) : "arn:aws:rds:${local.region}:${local.account_id}:db:${identifier}"]
   service_arns  = [for service in values(var.ecs_services) : "arn:aws:ecs:${local.region}:${local.account_id}:service/${service.cluster_name}/${service.service_name}"]
@@ -71,7 +71,7 @@ resource "aws_scheduler_schedule" "start_database" {
   name                         = "${local.full_name}-start-db-${each.key}"
   group_name                   = aws_scheduler_schedule_group.this.name
   state                        = var.start_schedule == null ? "DISABLED" : "ENABLED"
-  schedule_expression          = var.start_schedule == null ? local.never : var.start_schedule.databases
+  schedule_expression          = var.start_schedule == null ? local.disabled_start_expression : var.start_schedule.databases
   schedule_expression_timezone = var.timezone
 
   flexible_time_window {
@@ -121,7 +121,7 @@ resource "aws_scheduler_schedule" "start_service" {
   name                         = "${local.full_name}-start-svc-${each.key}"
   group_name                   = aws_scheduler_schedule_group.this.name
   state                        = var.start_schedule == null ? "DISABLED" : "ENABLED"
-  schedule_expression          = var.start_schedule == null ? local.never : var.start_schedule.services
+  schedule_expression          = var.start_schedule == null ? local.disabled_start_expression : var.start_schedule.services
   schedule_expression_timezone = var.timezone
 
   flexible_time_window {

@@ -20,7 +20,7 @@ Stops a non-production environment outside working hours and starts it again: EC
 
 ```hcl
 module "schedule" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/env-schedule?ref=v0.7.0"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/env-schedule?ref=v0.7.1"
 
   name          = "ordering"
   environment   = "integration"
@@ -47,7 +47,7 @@ module "schedule" {
 
 - **Start order.** A service whose tasks connect to the database fails its health checks while the database is starting, and ECS keeps replacing the tasks. Start databases about 15 minutes before services.
 - **Stopped databases restart after seven days.** RDS starts a stopped instance again after seven days. A stop cron that runs at least weekly stops it again.
-- **No start cron.** With `start_schedule = null` the start schedules still exist, disabled and set to a date that never comes, so the operator workflow can read their targets.
+- **No start cron.** With `start_schedule = null` the start schedules still exist, disabled, so the operator workflow can read their targets. A disabled schedule never runs, but EventBridge Scheduler still refuses an expression with no future run (a fixed past or far-future year), so they carry a yearly `cron(0 0 1 1 ? *)`.
 - **Terraform and desired count.** A service created with `manage_task_definition_externally = true` in `ecs-service` already ignores `desired_count`. A Terraform-managed one needs `ignore_desired_count = true`, or an apply while the environment is off starts it again.
 - **Applies while stopped.** Terraform cannot modify a stopped DB instance. Start the environment before an apply that changes the database, and before running migrations.
 - **Retries.** Each target is retried up to three times within an hour. Stopping an instance that is already stopped fails without harm.

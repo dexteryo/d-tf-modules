@@ -93,6 +93,11 @@ run "without_start_schedule_the_start_schedules_exist_disabled" {
   }
 
   assert {
+    condition     = aws_scheduler_schedule.start_service["api"].schedule_expression == "cron(0 0 1 1 ? *)" && aws_scheduler_schedule.start_database["main"].schedule_expression == "cron(0 0 1 1 ? *)"
+    error_message = "Disabled start schedules need an expression with future runs, because EventBridge Scheduler refuses one that never runs even on a disabled schedule."
+  }
+
+  assert {
     condition     = jsondecode(aws_scheduler_schedule.start_service["api"].target[0].input).DesiredCount == 2 && aws_scheduler_schedule.start_database["main"].target[0].arn == "arn:aws:scheduler:::aws-sdk:rds:startDBInstance"
     error_message = "Disabled start schedules still carry the targets the operator workflow replays."
   }
