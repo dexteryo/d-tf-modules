@@ -145,6 +145,53 @@ run "terraform_managed_service_follows_task_definition" {
   }
 }
 
+run "terraform_managed_service_can_ignore_desired_count_first_apply" {
+  command = apply
+
+  variables {
+    manage_task_definition_externally = false
+    ignore_desired_count              = true
+  }
+
+  assert {
+    condition     = length(aws_ecs_service.desired_count_ignored) == 1 && length(aws_ecs_service.terraform_managed) == 0 && length(aws_ecs_service.externally_managed) == 0
+    error_message = "ignore_desired_count = true on a Terraform-managed service must use the desired_count_ignored service only."
+  }
+
+  assert {
+    condition     = output.service_name == "ordering-agent-integration"
+    error_message = "service_name must come from whichever service variant exists."
+  }
+}
+
+run "terraform_managed_service_can_ignore_desired_count_after_change" {
+  command = apply
+
+  variables {
+    manage_task_definition_externally = false
+    ignore_desired_count              = true
+    desired_count                     = 5
+  }
+
+  assert {
+    condition     = aws_ecs_service.desired_count_ignored[0].desired_count == 1
+    error_message = "A service that ignores desired_count must keep the count a schedule or operator set."
+  }
+}
+
+run "ignore_desired_count_does_not_change_an_externally_managed_service" {
+  command = plan
+
+  variables {
+    ignore_desired_count = true
+  }
+
+  assert {
+    condition     = length(aws_ecs_service.externally_managed) == 1 && length(aws_ecs_service.desired_count_ignored) == 0
+    error_message = "An externally managed service already ignores desired_count and must stay on the externally_managed resource."
+  }
+}
+
 run "service_uses_the_given_security_groups_and_owns_none" {
   command = apply
 

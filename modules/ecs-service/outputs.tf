@@ -1,11 +1,11 @@
 output "service_name" {
   description = "Name of the ECS service"
-  value       = one(concat(aws_ecs_service.externally_managed[*].name, aws_ecs_service.terraform_managed[*].name))
+  value       = one(concat(aws_ecs_service.externally_managed[*].name, aws_ecs_service.terraform_managed[*].name, aws_ecs_service.desired_count_ignored[*].name))
 }
 
 output "service_arn" {
   description = "ARN of the ECS service"
-  value       = one(concat(aws_ecs_service.externally_managed[*].id, aws_ecs_service.terraform_managed[*].id))
+  value       = one(concat(aws_ecs_service.externally_managed[*].id, aws_ecs_service.terraform_managed[*].id, aws_ecs_service.desired_count_ignored[*].id))
 }
 
 output "task_definition_family" {
