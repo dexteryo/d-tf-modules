@@ -4,6 +4,10 @@ All notable changes to this repository are documented here. The format follows [
 
 ## [Unreleased]
 
+### Fixed
+
+- `modules/env-schedule`: with `start_schedule = null`, the disabled start schedules used `cron(0 0 1 1 ? 2199)`, which EventBridge Scheduler refuses ("invalid because it will never schedule an invocation"), so the first apply failed on every start schedule. They now carry a yearly `cron(0 0 1 1 ? *)`, which never runs while the schedule is disabled.
+
 ## [0.7.0] - 2026-11-08
 
 ### Added
