@@ -32,7 +32,7 @@ The module declares no `configuration_aliases`; pass `providers = { aws = aws.us
 
 ```hcl
 module "web_acl" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/waf-web-acl?ref=v0.6.2"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/waf-web-acl?ref=v0.7.0"
 
   providers = { aws = aws.us_east_1 }
 
