@@ -241,3 +241,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "ignore_desired_count" {
+  description = "Ignore desired_count changes on a Terraform-managed service, so a schedule or an operator can scale it to zero without the next apply scaling it back. Only used when manage_task_definition_externally is false, which already ignores desired_count. Switching it on a live service needs a moved block from aws_ecs_service.terraform_managed[0] to aws_ecs_service.desired_count_ignored[0]"
+  type        = bool
+  default     = false
+}

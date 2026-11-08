@@ -4,6 +4,11 @@ All notable changes to this repository are documented here. The format follows [
 
 ## [Unreleased]
 
+### Added
+
+- `modules/env-schedule`: EventBridge Scheduler schedules that scale ECS services to zero and stop RDS instances on one cron, then start databases and services on two later crons, read in an IANA time zone. With no start cron the start schedules exist disabled, so the environment stays off until an operator starts it. The scheduler role may only start and stop the named instances and update the named services. An optional operator role lets one GitHub repository environment, through OIDC, read the group's schedules and act on the same targets.
+- `modules/ecs-service`: optional `ignore_desired_count` (default `false`) for Terraform-managed services. When `true`, the service is created as `aws_ecs_service.desired_count_ignored`, which ignores `desired_count`, so a schedule that scales the service to zero is not undone by the next apply. Moving a live service needs a `moved` block from `aws_ecs_service.terraform_managed[0]`.
+
 ## [0.6.2] - 2026-11-06
 
 ### Added

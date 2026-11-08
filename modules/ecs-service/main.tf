@@ -141,7 +141,7 @@ resource "aws_ecs_service" "externally_managed" {
 }
 
 resource "aws_ecs_service" "terraform_managed" {
-  count = var.manage_task_definition_externally ? 0 : 1
+  count = !var.manage_task_definition_externally && !var.ignore_desired_count ? 1 : 0
 
   name                              = local.full_name
   cluster                           = var.cluster_arn
@@ -188,6 +188,58 @@ resource "aws_ecs_service" "terraform_managed" {
   depends_on = [aws_lb_listener_rule.this]
 }
 
+resource "aws_ecs_service" "desired_count_ignored" {
+  count = !var.manage_task_definition_externally && var.ignore_desired_count ? 1 : 0
+
+  name                              = local.full_name
+  cluster                           = var.cluster_arn
+  task_definition                   = aws_ecs_task_definition.this.arn
+  desired_count                     = var.desired_count
+  launch_type                       = length(var.capacity_provider_strategy) == 0 ? "FARGATE" : null
+  enable_execute_command            = var.enable_execute_command
+  health_check_grace_period_seconds = local.load_balancer_enabled ? var.health_check_grace_period_seconds : null
+  propagate_tags                    = "SERVICE"
+
+  network_configuration {
+    subnets          = var.subnet_ids
+    security_groups  = var.security_group_ids
+    assign_public_ip = var.assign_public_ip
+  }
+
+  deployment_circuit_breaker {
+    enable   = var.deployment_circuit_breaker.enable
+    rollback = var.deployment_circuit_breaker.rollback
+  }
+
+  dynamic "capacity_provider_strategy" {
+    for_each = var.capacity_provider_strategy
+
+    content {
+      capacity_provider = capacity_provider_strategy.value.capacity_provider
+      weight            = capacity_provider_strategy.value.weight
+      base              = capacity_provider_strategy.value.base
+    }
+  }
+
+  dynamic "load_balancer" {
+    for_each = local.load_balancer_enabled ? [var.load_balancer] : []
+
+    content {
+      target_group_arn = aws_lb_target_group.this[0].arn
+      container_name   = load_balancer.value.container_name
+      container_port   = load_balancer.value.container_port
+    }
+  }
+
+  tags = local.tags
+
+  depends_on = [aws_lb_listener_rule.this]
+
+  lifecycle {
+    ignore_changes = [desired_count]
+  }
+}
+
 resource "aws_appautoscaling_target" "this" {
   count = var.autoscaling != null ? 1 : 0
 
@@ -198,7 +250,7 @@ resource "aws_appautoscaling_target" "this" {
   max_capacity       = var.autoscaling.max
   tags               = local.tags
 
-  depends_on = [aws_ecs_service.externally_managed, aws_ecs_service.terraform_managed]
+  depends_on = [aws_ecs_service.externally_managed, aws_ecs_service.terraform_managed, aws_ecs_service.desired_count_ignored]
 }
 
 resource "aws_appautoscaling_policy" "cpu" {

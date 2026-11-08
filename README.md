@@ -17,6 +17,7 @@ Small, single-purpose Terraform modules for running services on ECS Fargate and 
 | [`modules/ecs-cluster`](modules/ecs-cluster) | Fargate cluster with Container Insights and optional ECS Exec logging |
 | [`modules/ecs-service`](modules/ecs-service) | Task definition, service, target group and listener rule, logs, roles, autoscaling. Takes security group ids |
 | [`modules/alb`](modules/alb) | External load balancer, its security group, HTTPS listeners, CloudFront-only ingress, header rules |
+| [`modules/env-schedule`](modules/env-schedule) | EventBridge Scheduler stop and start of ECS services and RDS instances outside working hours, and an optional GitHub OIDC operator role |
 | [`modules/ecs-service-alarms`](modules/ecs-service-alarms) | CloudWatch alarms for the service and the load balancer in front of it |
 | [`modules/sns-topic`](modules/sns-topic) | Encrypted alarm topic with a CloudWatch publish policy and subscriptions |
 | [`modules/ci-oidc-role`](modules/ci-oidc-role) | GitHub OIDC deploy role, trusted for one repository and one environment |
@@ -45,7 +46,8 @@ security-group ◄──► alb          (service group admits the alb group; al
 security-group ──► ecs-service   (security_group_ids)
 alb ──► ecs-service              (listener_arns[...] -> load_balancer.listener_arn)
 ecs-cluster ──► ecs-service, ecs-service-alarms
-ecs-service ──► ecs-service-alarms, ci-oidc-role
+ecs-service ──► ecs-service-alarms, ci-oidc-role, env-schedule
+rds-postgres ──► env-schedule (db_instances)
 kms ──► sqs-queue (kms_key_arn), lambda (kms_key_arn, logs_kms_key_arn), apigw-http-lambda (logs_kms_key_arn)
 sqs-queue ──► lambda   (policy_statements name queue_arn; environment_variables carry queue_url)
 lambda ──► apigw-http-lambda (function_name, function_invoke_arn)
