@@ -4,6 +4,14 @@ All notable changes to this repository are documented here. The format follows [
 
 ## [Unreleased]
 
+### Added
+
+- `modules/apigw-http-lambda`: optional `custom_domain` (`domain_name`, `certificate_arn`). It creates a regional domain with the `TLS_1_2` security policy and maps its root to the `$default` stage; `custom_domain_url` and `custom_domain_target` (the alias target for a DNS record) are null without one.
+
+### Changed
+
+- `modules/apigw-http-lambda`: `routes` accepts named path parameters as whole segments, for example `POST /webhooks/acme/{token}`, and the route's invoke permission matches one segment of any value there. Greedy parameters, partial segments and `$default` are still refused.
+
 ## [0.7.1] - 2026-11-08
 
 ### Fixed

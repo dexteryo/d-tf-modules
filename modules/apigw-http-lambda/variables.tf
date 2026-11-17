@@ -31,12 +31,12 @@ variable "function_invoke_arn" {
 }
 
 variable "routes" {
-  description = "Route keys the API accepts, each METHOD /path with no wildcard or path parameter, for example POST /webhooks/acme. Each gets its own invoke permission, so nothing else can reach the function through this API"
+  description = "Route keys the API accepts, each METHOD /path, for example POST /webhooks/acme. A path segment may be a named parameter such as {token}, but never a greedy {proxy+} or $default. Each route gets its own invoke permission, so nothing else can reach the function through this API"
   type        = list(string)
 
   validation {
-    condition     = length(var.routes) > 0 && alltrue([for route in var.routes : length(route) <= 60 && can(regex("^(GET|POST|PUT|PATCH|DELETE) /[A-Za-z0-9/_.-]*$", route))])
-    error_message = "Each route must be at most 60 characters, METHOD /path using GET, POST, PUT, PATCH or DELETE and only letters, digits, slash, underscore, dot and hyphen in the path."
+    condition     = length(var.routes) > 0 && alltrue([for route in var.routes : length(route) <= 60 && can(regex("^(GET|POST|PUT|PATCH|DELETE) /(([A-Za-z0-9_.-]+|\\{[A-Za-z][A-Za-z0-9_]*\\})(/([A-Za-z0-9_.-]+|\\{[A-Za-z][A-Za-z0-9_]*\\}))*)?/?$", route))])
+    error_message = "Each route must be at most 60 characters, METHOD /path using GET, POST, PUT, PATCH or DELETE. Path segments use letters, digits, underscore, dot and hyphen, or are a whole named parameter such as {token}; greedy parameters and $default are refused."
   }
 }
 
@@ -71,5 +71,19 @@ variable "integration_timeout_ms" {
   validation {
     condition     = var.integration_timeout_ms >= 50 && var.integration_timeout_ms <= 30000
     error_message = "integration_timeout_ms must be between 50 and 30000."
+  }
+}
+
+variable "custom_domain" {
+  description = "Optional regional custom domain for the API: domain_name (lower case, no trailing dot) and certificate_arn (an ACM certificate for that name in the API's region). The domain root maps to the default stage. The execute-api URL keeps working. Create the DNS record from the custom_domain_target output"
+  type = object({
+    domain_name     = string
+    certificate_arn = string
+  })
+  default = null
+
+  validation {
+    condition     = var.custom_domain == null || (can(regex("^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$", var.custom_domain.domain_name)) && can(regex("^arn:aws[a-z-]*:acm:[a-z0-9-]+:[0-9]{12}:certificate/[A-Za-z0-9-]+$", var.custom_domain.certificate_arn)))
+    error_message = "custom_domain.domain_name must be a lower-case host name without a trailing dot, and custom_domain.certificate_arn an ACM certificate ARN."
   }
 }
