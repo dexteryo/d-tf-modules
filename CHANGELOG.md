@@ -4,6 +4,8 @@ All notable changes to this repository are documented here. The format follows [
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-17
+
 ### Added
 
 - `modules/apigw-http-lambda`: optional `custom_domain` (`domain_name`, `certificate_arn`). It creates a regional domain with the `TLS_1_2` security policy and maps its root to the `$default` stage; `custom_domain_url` and `custom_domain_target` (the alias target for a DNS record) are null without one.
