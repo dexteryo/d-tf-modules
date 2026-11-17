@@ -6,6 +6,15 @@ mock_provider "aws" {
     }
   }
 
+  mock_resource "aws_apigatewayv2_domain_name" {
+    defaults = {
+      domain_name_configuration = {
+        target_domain_name = "d-abc123.execute-api.eu-west-1.amazonaws.com"
+        hosted_zone_id     = "Z2HOSTEDZONE"
+      }
+    }
+  }
+
   mock_resource "aws_cloudwatch_log_group" {
     defaults = {
       arn = "arn:aws:logs:eu-west-1:123456789012:log-group:/ordering-integration-webhooks/api/access"
@@ -91,14 +100,123 @@ run "the_stage_throttles_and_logs_to_an_encrypted_group" {
   }
 }
 
-run "wildcard_and_parameter_routes_are_refused" {
+run "a_named_path_parameter_gets_a_permission_for_any_value_of_that_segment" {
+  command = apply
+
+  variables {
+    routes = ["POST /webhooks/acme/{token}"]
+  }
+
+  assert {
+    condition     = aws_apigatewayv2_route.this["POST /webhooks/acme/{token}"].route_key == "POST /webhooks/acme/{token}"
+    error_message = "The route keeps its path parameter."
+  }
+
+  assert {
+    condition     = aws_lambda_permission.this["POST /webhooks/acme/{token}"].source_arn == "arn:aws:execute-api:eu-west-1:123456789012:abc123/*/POST/webhooks/acme/*"
+    error_message = "The permission matches one segment of any value where the parameter is, and nothing else."
+  }
+
+  assert {
+    condition     = can(regex("^[A-Za-z0-9_-]{1,100}$", aws_lambda_permission.this["POST /webhooks/acme/{token}"].statement_id))
+    error_message = "The statement id of a parameter route uses only characters Lambda accepts."
+  }
+}
+
+run "greedy_parameters_are_refused" {
   command = plan
 
   variables {
-    routes = ["POST /webhooks/{partner}"]
+    routes = ["POST /webhooks/{proxy+}"]
   }
 
   expect_failures = [var.routes]
+}
+
+run "a_parameter_must_be_a_whole_segment" {
+  command = plan
+
+  variables {
+    routes = ["POST /webhooks/acme-{token}"]
+  }
+
+  expect_failures = [var.routes]
+}
+
+run "the_default_route_is_refused" {
+  command = plan
+
+  variables {
+    routes = ["$default"]
+  }
+
+  expect_failures = [var.routes]
+}
+
+run "no_custom_domain_unless_asked" {
+  command = apply
+
+  assert {
+    condition     = length(aws_apigatewayv2_domain_name.this) == 0 && length(aws_apigatewayv2_api_mapping.this) == 0
+    error_message = "Without custom_domain the module creates no domain and no mapping."
+  }
+
+  assert {
+    condition     = output.custom_domain_url == null && output.custom_domain_target == null
+    error_message = "The custom domain outputs are null when there is no custom domain."
+  }
+}
+
+run "a_custom_domain_serves_the_default_stage_over_tls_1_2" {
+  command = apply
+
+  variables {
+    custom_domain = {
+      domain_name     = "hooks.example.com"
+      certificate_arn = "arn:aws:acm:eu-west-1:123456789012:certificate/22222222-2222-2222-2222-222222222222"
+    }
+  }
+
+  assert {
+    condition     = one(aws_apigatewayv2_domain_name.this).domain_name == "hooks.example.com"
+    error_message = "The domain uses the given name."
+  }
+
+  assert {
+    condition = alltrue([
+      for config in one(aws_apigatewayv2_domain_name.this).domain_name_configuration :
+      config.endpoint_type == "REGIONAL" && config.security_policy == "TLS_1_2" && config.certificate_arn == var.custom_domain.certificate_arn
+    ])
+    error_message = "The domain is regional, uses the given certificate and refuses TLS older than 1.2."
+  }
+
+  assert {
+    condition     = one(aws_apigatewayv2_api_mapping.this).stage == "$default" && one(aws_apigatewayv2_api_mapping.this).api_id == "abc123" && one(aws_apigatewayv2_api_mapping.this).api_mapping_key == null
+    error_message = "The domain root maps to the API's default stage."
+  }
+
+  assert {
+    condition     = output.custom_domain_url == "https://hooks.example.com"
+    error_message = "custom_domain_url is the https URL of the domain."
+  }
+
+  assert {
+    condition     = output.custom_domain_target.domain_name == "d-abc123.execute-api.eu-west-1.amazonaws.com" && output.custom_domain_target.hosted_zone_id == "Z2HOSTEDZONE"
+    error_message = "custom_domain_target gives the alias target for a DNS record."
+  }
+}
+
+run "a_custom_domain_name_is_validated" {
+  command = plan
+
+  variables {
+    custom_domain = {
+      domain_name     = "Hooks.Example.com."
+      certificate_arn = "arn:aws:acm:eu-west-1:123456789012:certificate/22222222-2222-2222-2222-222222222222"
+    }
+  }
+
+  expect_failures = [var.custom_domain]
 }
 
 run "routes_need_a_method_and_must_not_be_empty" {
