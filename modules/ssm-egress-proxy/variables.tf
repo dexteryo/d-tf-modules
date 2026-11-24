@@ -46,13 +46,13 @@ variable "kms_key_arn" {
 }
 
 variable "instance_type" {
-  description = "Graviton instance type; the AMI is arm64"
+  description = "Graviton instance type; the AMI is arm64. It needs at least 1 GiB of memory, because dnf upgrade at boot runs a t4g.nano (512 MiB) out of memory and stalls the SSM agent"
   type        = string
-  default     = "t4g.nano"
+  default     = "t4g.micro"
 
   validation {
     condition     = can(regex("^[a-z]+[0-9]+g[a-z]*\\.[a-z0-9]+$", var.instance_type))
-    error_message = "instance_type must be a Graviton (arm64) type such as t4g.nano."
+    error_message = "instance_type must be a Graviton (arm64) type such as t4g.micro."
   }
 }
 

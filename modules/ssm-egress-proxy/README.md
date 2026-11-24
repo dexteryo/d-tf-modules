@@ -4,7 +4,7 @@ A private HTTPS proxy on one Graviton instance. Its traffic leaves through the s
 
 ## Owns
 
-- `aws_instance` named `<name>-<environment>-<name_suffix>` (suffix `egress-proxy` by default), Amazon Linux 2023 arm64, `t4g.nano` by default, without a public IP.
+- `aws_instance` named `<name>-<environment>-<name_suffix>` (suffix `egress-proxy` by default), Amazon Linux 2023 arm64, `t4g.micro` by default, without a public IP.
 - squid, installed at boot, listening on `127.0.0.1:<proxy_port>` (3128 by default). It accepts only `CONNECT` to port 443, so it tunnels HTTPS without reading it, caches nothing and drops `Via` and `X-Forwarded-For`. With `allowed_domains` it refuses every other destination.
 - A security group with no ingress rule and one HTTPS egress rule per range in `egress_ipv4_cidrs`.
 - An instance role with `AmazonSSMManagedInstanceCore`, and its instance profile.
@@ -20,7 +20,7 @@ A private HTTPS proxy on one Graviton instance. Its traffic leaves through the s
 
 ```hcl
 module "egress_proxy" {
-  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/ssm-egress-proxy?ref=v0.9.0"
+  source = "git::ssh://git@github.com/dexteryo/d-tf-modules.git//modules/ssm-egress-proxy?ref=v0.9.1"
 
   name            = "ordering"
   environment     = "integration"
@@ -46,6 +46,7 @@ open -na "Google Chrome" --args --user-data-dir="$HOME/.chrome-proxy" --proxy-se
 
 - Egress has no default. `egress_ipv4_cidrs` must let the instance reach Systems Manager and the package repositories as well as the proxied hosts. Partners behind a CDN or Azure Front Door have no fixed ranges, so in practice it is `["0.0.0.0/0"]`, and that exception then sits visibly in the calling configuration, where a scanner can flag it. A VPC with `ssm`, `ssmmessages` and `ec2messages` interface endpoints lets you narrow it to the partners' ranges, but `dnf upgrade` at boot then needs a route to the Amazon Linux repositories too.
 
+- `t4g.micro` (1 GiB) is the smallest type that works. On a `t4g.nano` (512 MiB) the `dnf upgrade` at boot runs out of memory, the SSM agent stops answering, and sessions hang at Connecting.
 - Any destination is allowed until you set `allowed_domains`. A browser reading a partner's documentation also loads fonts and scripts from other hosts, so an allowlist that is too tight breaks those pages.
 - The AMI is read once. A new Amazon Linux release does not replace the instance; it runs `dnf upgrade` at every boot. To move to a new AMI, apply with `-replace` on `aws_instance.this`.
 - Changing `proxy_port` or `allowed_domains` changes the user data and replaces the instance.
@@ -106,7 +107,7 @@ No modules.
 | vpc\_id | VPC the proxy runs in | `string` | n/a | yes |
 | allowed\_domains | Destinations the proxy may tunnel to, in squid dstdomain form (a leading dot matches subdomains, for example .example.com). Empty allows any host | `list(string)` | `[]` | no |
 | ami\_ssm\_parameter | Public SSM parameter that holds the Amazon Linux 2023 arm64 AMI ID | `string` | `"/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64"` | no |
-| instance\_type | Graviton instance type; the AMI is arm64 | `string` | `"t4g.nano"` | no |
+| instance\_type | Graviton instance type; the AMI is arm64. It needs at least 1 GiB of memory, because dnf upgrade at boot runs a t4g.nano (512 MiB) out of memory and stalls the SSM agent | `string` | `"t4g.micro"` | no |
 | name\_suffix | Optional last part of the name | `string` | `"egress-proxy"` | no |
 | proxy\_port | Port squid listens on, on the instance's loopback only | `number` | `3128` | no |
 | tags | Tags for every resource, usually the all\_tags output of the tags module | `map(string)` | `{}` | no |
