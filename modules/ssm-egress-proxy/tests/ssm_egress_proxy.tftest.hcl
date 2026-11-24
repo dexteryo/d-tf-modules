@@ -51,8 +51,8 @@ run "instance_is_private_hardened_and_named_from_the_inputs" {
   }
 
   assert {
-    condition     = aws_instance.this.ami == "ami-0123456789abcdef0" && aws_instance.this.instance_type == "t4g.nano"
-    error_message = "The instance uses the AMI from the SSM parameter on a t4g.nano by default."
+    condition     = aws_instance.this.ami == "ami-0123456789abcdef0" && aws_instance.this.instance_type == "t4g.micro"
+    error_message = "The instance uses the AMI from the SSM parameter on a t4g.micro by default."
   }
 }
 

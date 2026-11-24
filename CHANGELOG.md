@@ -4,6 +4,12 @@ All notable changes to this repository are documented here. The format follows [
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-11-24
+
+### Fixed
+
+- `modules/ssm-egress-proxy`: the default `instance_type` is now `t4g.micro`. On the old default, `t4g.nano` (512 MiB), the `dnf upgrade` at boot ran out of memory, the SSM agent stopped answering and port-forwarding sessions hung at Connecting. Callers that set `t4g.nano` explicitly should move to `t4g.micro` or larger.
+
 ## [0.9.0] - 2026-11-24
 
 ### Added
