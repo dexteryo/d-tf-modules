@@ -24,6 +24,7 @@ Small, single-purpose Terraform modules for running services on ECS Fargate and 
 | [`modules/sqs-queue`](modules/sqs-queue) | Encrypted queue with a dead-letter queue, TLS-only policies and an alarm on the dead-letter queue |
 | [`modules/lambda`](modules/lambda) | One function with its role, encrypted logs, optional VPC access, and a placeholder zip so a deploy workflow owns the code |
 | [`modules/apigw-http-lambda`](modules/apigw-http-lambda) | HTTP API that sends a fixed list of routes to one function, with per-route invoke permissions, throttling and encrypted access logs |
+| [`modules/ssm-egress-proxy`](modules/ssm-egress-proxy) | Private HTTPS proxy on one Graviton instance, reached only through SSM port forwarding, so people can call partners that allowlist the VPC's NAT IPs |
 | [`examples/ordering-agent`](examples/ordering-agent) | All of the above composed for a two-container service |
 
 The `lambda` module is deliberately small: one function, its role and logs, with optional VPC access. Packaging modes, tracing agents, container images, aliases and secret wiring stay out; pass what you need through `policy_statements` and `environment_variables`.
@@ -51,6 +52,7 @@ rds-postgres ──► env-schedule (db_instances)
 kms ──► sqs-queue (kms_key_arn), lambda (kms_key_arn, logs_kms_key_arn), apigw-http-lambda (logs_kms_key_arn)
 sqs-queue ──► lambda   (policy_statements name queue_arn; environment_variables carry queue_url)
 lambda ──► apigw-http-lambda (function_name, function_invoke_arn)
+vpc, kms ──► ssm-egress-proxy (vpc_id, a private subnet_id, kms_key_arn)
 sns-topic ──► sqs-queue (alarm_actions)
 sns-topic ──► ecs-service-alarms (alarm_actions)
 ```

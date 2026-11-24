@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+
+dnf upgrade -y
+dnf install -y squid
+
+cat > /etc/squid/squid.conf <<'CONF'
+http_port 127.0.0.1:${proxy_port}
+acl SSL_ports port 443
+acl CONNECT method CONNECT
+%{ if length(allowed_domains) > 0 ~}
+acl allowed_destinations dstdomain ${join(" ", allowed_domains)}
+%{ endif ~}
+http_access deny !CONNECT
+http_access deny !SSL_ports
+http_access deny to_localhost
+%{ if length(allowed_domains) > 0 ~}
+http_access deny !allowed_destinations
+%{ endif ~}
+http_access allow localhost
+http_access deny all
+cache deny all
+via off
+forwarded_for delete
+access_log stdio:/var/log/squid/access.log
+CONF
+
+systemctl enable --now squid
