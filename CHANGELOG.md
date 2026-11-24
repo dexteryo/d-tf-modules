@@ -4,6 +4,8 @@ All notable changes to this repository are documented here. The format follows [
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-24
+
 ### Added
 
 - `modules/ssm-egress-proxy`: one Graviton instance in a private subnet running squid on its loopback, with no inbound rule, reached only through an SSM port-forwarding session. Its HTTPS egress goes only to the ranges in the required `egress_ipv4_cidrs`. It lets people call partners that allowlist the VPC's NAT IPs, from a laptop with a changing IP. Squid tunnels HTTPS only, caches nothing, drops the `Via` and `X-Forwarded-For` headers and, with `allowed_domains`, refuses any other destination. IMDSv2 only, root volume encrypted with the given key, the AMI read from the public Amazon Linux 2023 parameter and ignored after creation.
